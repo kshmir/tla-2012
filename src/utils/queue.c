@@ -1,0 +1,54 @@
+/*
+ *  queue.c
+ *  so-2011
+ *
+ *  Created by Agustin Marseillan on 8/12/11.
+ *  Copyright 2011 __MyCompanyName__. All rights reserved.
+ *
+ */
+
+#include "queue.h"
+#include "list.h"
+
+struct queue{
+	list l;
+};
+
+queue	queue_init(){
+	queue q = (queue)malloc(sizeof(struct queue));
+	q->l = list_init();
+	return q;
+}
+
+void	queue_poll(queue q, void * e){
+	list_add(q->l, e);
+}
+
+void *	queue_pull(queue q){
+	if (q == NULL || list_size(q->l) == 0) {
+		return NULL;
+	}
+	void * ret = list_get(q->l, 0);
+	list_remove(q->l, 0);
+	
+	return ret;
+}
+
+void *	queue_peek(queue q){
+	void * ret = list_get(q->l, 0);
+	return ret;
+}
+
+int queue_size(queue q) {
+	return list_size(q->l);
+}
+
+int		queue_empty(queue q) {
+	
+	return list_size(q->l) == 0;
+}
+
+void	queue_free(queue q){
+	list_free(q->l);
+	free(q);
+}
