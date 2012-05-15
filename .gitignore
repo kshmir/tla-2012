@@ -1,2 +1,4 @@
-.o
+lex.yy.c
+a.out
+*.o
 .DS_Store

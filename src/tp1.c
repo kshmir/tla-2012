@@ -3,20 +3,28 @@
 #include <string.h>
 #include "utils/list.h"
 #include "utils/cstring.h"
-// #include "utils/grammar.h"
 
+
+
+cstring from_file(cstring path) {
+  cstring builder = cstring_init(1);
+  cstring buffer = cstring_init(1024);
+  FILE * pFile;
+  pFile = fopen (path , "r");
+  if ( fgets (buffer , 1024 , pFile) != NULL ) {
+    builder = cstring_write(builder, buffer);
+  }
+  fclose (pFile);
+
+  printf("%s\n", builder);
+}
+
+int authomata_to_grammar() {
+
+}
 
 int grammar_to_authomata() {
-  list l = list_init();
-
-  cstring cadena = cstring_copy("hola");
-
-  list_add(l, cadena);
-
-  char * b = list_get(l, 0);
-
-  printf("%s\n", b);
-
+  from_file("hola.gr");
 }
 
 int main(int len, char ** args) {
@@ -24,6 +32,9 @@ int main(int len, char ** args) {
     char * input = args[0];
     if (strstr(input,".gr") != -1) {
       grammar_to_authomata();
+    }
+    if (strstr(input,".dot") != -1) {
+      authomata_to_grammar();
     }
   }
 }
