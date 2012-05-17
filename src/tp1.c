@@ -3,38 +3,40 @@
 #include <string.h>
 #include "utils/list.h"
 #include "utils/cstring.h"
+#include "tp1.h"
 
-
-
-cstring from_file(cstring path) {
-  cstring builder = cstring_init(1);
-  cstring buffer = cstring_init(1024);
-  FILE * pFile;
-  pFile = fopen (path , "r");
-  if ( fgets (buffer , 1024 , pFile) != NULL ) {
-    builder = cstring_write(builder, buffer);
-  }
-  fclose (pFile);
-
-  printf("%s\n", builder);
-}
-
-int authomata_to_grammar() {
-
-}
-
-int grammar_to_authomata() {
-  from_file("hola.gr");
-}
-
-int main(int len, char ** args) {
+void run(int len, char ** args) {
   if (len == 2) {
-    char * input = args[0];
-    if (strstr(input,".gr") != -1) {
-      grammar_to_authomata();
+    char * input = args[1];
+    int ready_to_read = 0;
+
+    if (strstr(input,".gr") != NULL) {
+      FILE * pFile = fopen (input , "r");
+      stdin = pFile;
+      ready_to_read = GRAMMAR;
+      start_adts(ready_to_read);
     }
-    if (strstr(input,".dot") != -1) {
-      authomata_to_grammar();
+    if (strstr(input,".dot") != NULL) {
+      FILE * pFile = fopen (input , "r");
+      stdin = pFile;
+      ready_to_read = AUTOMATHA;
+      start_adts(ready_to_read);
     }
+    
+    if (ready_to_read) {
+      yylex();
+      // run();
+    }
+  }
+}
+
+void start_adts(int mode) {
+  switch(mode) {
+    case GRAMMAR:
+      parsingGrammar = 1;
+      break;
+    case AUTOMATHA:
+      parsingAutomatha = 1;
+      break;
   }
 }

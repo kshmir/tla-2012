@@ -1,8 +1,11 @@
-tp1 : dependencies tp
-	gcc -m32 -o salida tp.o cstring.o map.o list.o includes.o tree.o
+tp1 : tp
+	gcc -m32 -lfl -o salida lex.o tp.o cstring.o map.o list.o includes.o tree.o grammar.o automatha.o
 tp : 
+	flex --outfile=src/lex.gen.c src/parser.l
+	gcc -m32 -lfl -o lex.o -c src/lex.gen.c 
+	gcc -m32 -o grammar.o -c src/lib/grammar.c 
+	gcc -m32 -o automatha.o -c src/lib/automatha.c 
 	gcc -m32 -o tp.o -c src/tp1.c 
-dependencies : 
 	gcc -m32 -o cstring.o -c src/utils/cstring.c 
 	gcc -m32 -o map.o -c src/utils/map.c 
 	gcc -m32 -o queue.o -c src/utils/queue.c 

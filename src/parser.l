@@ -1,28 +1,11 @@
 %{
+#include "tp1.h"
+#include "lib/automatha.h"
+#include "lib/grammar.h"
 
-  #define G_TUPLES      0
-  #define G_NON_TERMS   1
-  #define G_TERMS       2
-  #define G_START       3
-  #define G_PRODUCTIONS 4
-
-  int parsingGrammar = 0;
-
-  int state = 0; 
-
-  int parsingAutomatha = 0;
-
-  #define A_STATE_SHAPE_START      1
-  #define A_STATE_SHAPE_END        2
-  #define A_STATE_NAME_START       3
-  #define A_STATE_NAME_END         4
-  #define A_STATE_LABEL_START      5
-  #define A_STATE_LABEL_END        6
-  #define A_STATE_END              7
-
-  #define A_TRANS_MATCH            8
-  #define A_TRANS_LABEL_START      9
-  #define A_TRANS_LABEL_END        10
+int parsingGrammar = 0;
+int state = 0; 
+int parsingAutomatha = 0;
 
 %}
 
@@ -107,10 +90,6 @@ doublecircle          { if (parsingAutomatha && state == A_STATE_SHAPE_START) { 
 
 
 
-int main ()
-{
-  parsingGrammar = 0;
-  parsingAutomatha = 1;
-  yylex();
-  return 0;
+int main(int len, char ** args) {
+  run(len, args);
 }
