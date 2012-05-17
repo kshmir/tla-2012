@@ -11,4 +11,16 @@ tp :
 	gcc -m32 -o queue.o -c src/utils/queue.c 
 	gcc -m32 -o list.o -c src/utils/list.c 
 	gcc -m32 -o includes.o -c src/includes.c 
-	gcc -m32 -o tree.o -c src/utils/tree.c 
+	gcc -m32 -o tree.o -c src/utils/tree.c
+clean:
+	rm lex.o
+	rm list.o 
+	rm map.o
+	rm queue.o
+	rm tree.o 
+	rm grammar.o
+	rm automatha.o 
+	rm src/lex.gen.c 
+	rm cstring.o 
+	rm tp.o
+	rm includes.o

@@ -1,3 +1,7 @@
+
+#include <stdlib.h>
+#include <stdio.h>
+#include "../utils/cstring.h"
 #include "grammar.h"
 
 struct grammar {
@@ -8,15 +12,23 @@ struct grammar {
 };
 
 grammar grammar_init() {
-  // Start a grammar and return the adt
+    grammar g = malloc(sizeof(struct grammar));
+    
+    g->vt = list_init();
+    g->vn = list_init();
+    g->s = cstring_init(0);
+    g->p = list_init();
+    
+    
+    return g;
 }
 
 void grammar_add_terminal(grammar g, cstring token) {
-
+    list_add(g->vt, cstring_copy(token));
 }
 
 void grammar_add_non_terminal(grammar g, cstring token) {
-
+    list_add(g->vn, cstring_copy(token));
 }
 
 void grammar_set_start_token(grammar g, cstring token) {
