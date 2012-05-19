@@ -32,9 +32,9 @@ void grammar_add_non_terminal(grammar g, cstring token) {
 }
 
 void grammar_set_start_token(grammar g, cstring token) {
-
+	g->s = cstring_copy(token);
 }
 
 void grammar_add_production(grammar g, production production) {
-  
+	list_add(g->p, production);
 }

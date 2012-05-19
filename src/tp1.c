@@ -17,7 +17,7 @@ void run(int len, char ** args) {
       start_adts(ready_to_read);
     }
     if (strstr(input,".dot") != NULL) {
-      FILE * pFile = fopen (input , "r");
+      FILE * pFile = fopen (input , "rx3");
       stdin = pFile;
       ready_to_read = AUTOMATHA;
       start_adts(ready_to_read);

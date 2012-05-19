@@ -1,5 +1,6 @@
-tlatp.xcodeproj
-lex.yy.c
-a.out
-*.o
 .DS_Store
+target
+salida
+src/lex.gen.c
+.project
+.cproject

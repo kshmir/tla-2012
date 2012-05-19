@@ -22,6 +22,7 @@
 #define A_TRANS_LABEL_START      9
 #define A_TRANS_LABEL_END        10
 
+
 extern int parsingGrammar;
 extern int state; 
 extern int parsingAutomatha;
