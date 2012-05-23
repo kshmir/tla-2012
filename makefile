@@ -17,7 +17,7 @@ tp : clean
 	gcc -m32 -o target/tree.o -c src/utils/tree.c
 clean:
 	rm -rf target
-	rm src/lex.gen.c
+	rm -f src/lex.gen.c
 all : tp
 	gcc -m32 -lfl -o salida target/lex.o target/tp.o target/cstring.o \
 	target/map.o target/list.o target/includes.o target/tree.o \
