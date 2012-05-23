@@ -65,4 +65,6 @@ void cstring_free(cstring s);
 
 cstring cstring_copy_till_char(cstring s, char c, int amount);
 
+cstring cstring_trim(cstring s);
+
 #endif

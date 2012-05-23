@@ -1,6 +1,9 @@
 #ifndef _TP1_H_
 #define _TP1_H_ 
 
+#include "lib/automatha.h"
+#include "lib/grammar.h"
+
 #define GRAMMAR   1
 #define AUTOMATHA 2
 
@@ -26,6 +29,8 @@
 extern int parsingGrammar;
 extern int state; 
 extern int parsingAutomatha;
+extern automatha _a;
+extern grammar _g;
 
 void run(int len, char ** args);
 
