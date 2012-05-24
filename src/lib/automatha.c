@@ -114,7 +114,7 @@ void automatha_print(automatha a, FILE * file) {
 
 	automatha_print_transitions(a, file);
 
-	fprintf(file, "");
+	fprintf(file, "}\n");
 }
 
 

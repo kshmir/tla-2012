@@ -10,10 +10,10 @@ void tp_run(int mode) {
 
 	switch (mode) {
 		case GRAMMAR:
-//			grammar_print(_g, stdout);
+			grammar_print(_g, stdout);
 			break;
 		case AUTOMATHA:
-//			automatha_print(_a, stdout);
+			automatha_print(_a, stdout);
 			break;
 	}
 }

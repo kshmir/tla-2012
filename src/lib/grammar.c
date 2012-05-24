@@ -48,14 +48,17 @@ grammar grammar_init() {
 }
 
 void grammar_add_terminal(grammar g, cstring token) {
+	printf(".%s.\n", token);
     list_add(g->vt, cstring_copy(token));
 }
 
 void grammar_add_non_terminal(grammar g, cstring token) {
+	printf(".%s.\n", token);
     list_add(g->vn, cstring_copy(token));
 }
 
 void grammar_set_start_token(grammar g, cstring token) {
+	printf(".%s.\n", token);
 	g->s = cstring_copy(token);
 }
 

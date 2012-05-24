@@ -6,7 +6,7 @@
 #include "lib/grammar.h"
 
 int parsingGrammar = 0;
-int state = 0; 
+int state = 0;
 int parsingAutomatha = 0;
 
 int     automatha_state_isfinal = 0;
@@ -19,7 +19,6 @@ cstring automatha_trans_label;
 automatha _a;
 grammar _g;
 
-
 %}
 
 %%
@@ -29,7 +28,12 @@ grammar _g;
 ([a-zA-Z0-9]+)[ ]?=   { if (parsingGrammar) { state++; printf("GRAMMAR!\n"); } else { REJECT; } } 
 
 (\{)?[A-Z][ ]*->[ ]*([A-Za-z\\]+\|)*[A-Za-z]+[ ]*(,)?       { 
-                        if (parsingGrammar && state == G_PRODUCTIONS) { 
+                        if (parsingGrammar && state == G_PRODUCTIONS) {
+                        	cstring nocomma = cstring_replace(yytext, ",", "");
+                        	cstring trimmed = cstring_trim(nocomma);
+                        	production p = production_from_string(trimmed);
+                        	
+                        	printf("!!! .%s.\n", production_get_start(p));
                           printf("grammarProduction!"); 
                         } else { REJECT; }
                       }
@@ -42,23 +46,32 @@ grammar _g;
 
 [ ]*\([ ]*\{[ ]*      { 
                         if (parsingGrammar && state == G_NON_TERMS) {  
-                          printf("parsingGrammarNonTerminals!\n"); ; 
+                           
                         } else { REJECT; }
                       }
 
 [A-Z][ ]*(,)          {
                         if (parsingGrammar && state == G_START) {
-                          printf("GRAMMAR START!\n"); state++;
-                        } else if (parsingGrammar && state == G_NON_TERMS) { 
-                          printf("NT"); 
+                        	cstring nocomma = cstring_replace(yytext, ",", "");
+							cstring trimmed = cstring_trim(nocomma);
+							grammar_set_start_token(_g, trimmed);
+							state++;
+                        } else if (parsingGrammar && state == G_NON_TERMS) {
+                        	cstring nocomma = cstring_replace(yytext, ",", "");
+							cstring trimmed = cstring_trim(nocomma);
+							grammar_add_non_terminal(_g, trimmed); 
                         } else { REJECT; }
                       }
 
 [A-Za-z](,)?          { 
-                        if (parsingGrammar && state == G_NON_TERMS) { 
-                          printf("NT"); 
+                        if (parsingGrammar && state == G_NON_TERMS) {
+                        	cstring nocomma = cstring_replace(yytext, ",", "");
+                        	cstring trimmed = cstring_trim(nocomma);
+                        	grammar_add_non_terminal(_g, trimmed); 
                         } else if (parsingGrammar && state == G_TERMS) { 
-                          printf("T "); 
+                        	cstring nocomma = cstring_replace(yytext, ",", "");
+							cstring trimmed = cstring_trim(nocomma);
+							grammar_add_terminal(_g, trimmed); 
                         } else { REJECT; }
                       }
 
