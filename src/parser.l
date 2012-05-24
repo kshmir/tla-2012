@@ -29,11 +29,16 @@ grammar _g;
 
 (\{)?[A-Z][ ]*->[ ]*([A-Za-z\\]+\|)*[A-Za-z]+[ ]*(,)?       { 
                         if (parsingGrammar && state == G_PRODUCTIONS) {
-                        	cstring nocomma = cstring_replace(yytext, ",", "");
+                        	cstring nokey = cstring_replace(yytext, "{", "");
+                        	cstring nocomma = cstring_replace(nokey, ",", "");
                         	cstring trimmed = cstring_trim(nocomma);
                         	production p = production_from_string(trimmed);
                         	
                         	printf("!!! .%s.\n", production_get_start(p));
+                        	
+                        	foreach(cstring, str, production_get_tokens(p)) {
+                        		printf(" !!! --- .%s.\n", str);
+                        	}
                           printf("grammarProduction!"); 
                         } else { REJECT; }
                       }

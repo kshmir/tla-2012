@@ -96,7 +96,7 @@ production production_from_string(cstring string) {
 	list parse = cstring_split_list(to_parse, "->");
 
 	// "A"
-	cstring start = list_get(parse, 0);
+	cstring start = cstring_trim(list_get(parse, 0));
 
 	production_set_start(p, start);
 
@@ -109,15 +109,7 @@ production production_from_string(cstring string) {
 	// Crea una lista con todos los tokens de X, Y ... Z
 	// Y los agrega a la producción.
 	foreach(cstring, prod, productions) {
-		list to_save = list_init();
-		int i = 0;
-		int len = cstring_len(prod);
-		for (i = 0; i < len; ++i) {
-			cstring token = cstring_init(1);
-			token[0] = prod[i];
-			list_add(to_save, token);
-		}
-		production_add_token(p, to_save);
+		production_add_token(p, cstring_trim(prod));
 	}
 
 	return p;
