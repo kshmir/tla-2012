@@ -115,6 +115,13 @@ doublecircle          {
 						} 
 						else if (parsingAutomatha && state == A_TRANS_LABEL_START) { 
 							automatha_trans_label = cstring_copy(yytext);
+							
+							list tokens = cstring_split_list(automatha_trans_relation, "->");
+	
+							automatha_add_transition(_a, list_get(tokens, 0), list_get(tokens, 1), automatha_trans_label);
+
+							list_free(tokens);
+							
 							state = A_TRANS_LABEL_END; 
 						} else { REJECT; } 
 					}
@@ -125,13 +132,6 @@ doublecircle          {
 
 [A-Za-z0-9]+[ ]*->[A-Za-z0-9]+[ ]*[ ] { if (parsingAutomatha && state == 0) { 
 							automatha_trans_relation = cstring_copy(yytext);
-							
-							
-							list tokens = cstring_split_list(automatha_trans_relation, "->");
-							
-							automatha_add_transition(_a, list_get(tokens, 0), list_get(tokens, 1), automatha_state_label);
-
-							list_free(tokens);
 							
 							state = A_TRANS_MATCH; } else { REJECT; } }
 
