@@ -1,3 +1,5 @@
+%option noyywrap
+
 %{
 #include "tp1.h"
 #include "lib/automatha.h"

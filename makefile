@@ -1,5 +1,5 @@
 tp1 : tp
-	gcc -m32 -lfl -o salida target/lex.o target/tp.o \
+	gcc -m32 -o salida target/tp.o target/lex.o \
 	 target/cstring.o target/map.o target/list.o target/includes.o \
 	 target/tree.o target/grammar.o target/automatha.o
 tp : clean
@@ -19,6 +19,6 @@ clean:
 	rm -rf target
 	rm -f src/lex.gen.c
 all : tp
-	gcc -m32 -lfl -o salida target/lex.o target/tp.o target/cstring.o \
+	gcc -m32 -o salida target/lex.o target/tp.o target/cstring.o \
 	target/map.o target/list.o target/includes.o target/tree.o \
 	target/grammar.o target/automatha.o
