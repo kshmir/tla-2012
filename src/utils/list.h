@@ -10,7 +10,7 @@
 #ifndef _LIST_H_
 #define _LIST_H_
 
-
+#include "../includes.h"
 
 // Este foreach es ninja
 #define foreach(type, item, list) \
@@ -56,9 +56,9 @@ int list_size(list p);
 // Retreives an element in the given index of the list
 void * list_get(list p, int index);
 
-// // Inserts an element in the given index of the list
-// int list_indexOf(list p, void * ptr, comparer comp);
+int list_indexof(list p, void * ptr, comparer comp);
 
+int list_remove_item(list p, void * ptr, comparer comp);
 // Removes an element in the given index of the list
 int list_remove(list p, int index);
 
@@ -75,5 +75,7 @@ void * list_header(list p);
 void * list_node_next(void * n);
 
 void * list_node_value(void * n);
+
+list list_copy(list l, cloner c);
 
 #endif

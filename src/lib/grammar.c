@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "../utils/list.h"
 #include "../utils/map.h"
+#include "../utils/tree.h"
 #include "../utils/cstring.h"
 #include "grammar.h"
 
@@ -109,6 +110,7 @@ map grammar_get_productions(grammar g) {
 
 grammar grammar_init() {
 	grammar g = malloc(sizeof(struct grammar));
+
 	g->vt = list_init();
 	g->vn = list_init();
 	g->s = NULL;
@@ -177,7 +179,7 @@ void grammar_print(grammar g, FILE * file) {
 		int lenn = list_size(p->tokens);
 		for (i = 0; i < lenn; ++i) {
 			fprintf(file,"%s", (char *)list_get(p->tokens, i));
-			if (len - 1 != i) {
+			if (lenn - 1 != i) {
 				fprintf(file,"|");
 			}
 		}
@@ -239,3 +241,123 @@ list production_get_tokens(production p) {
 cstring production_get_start(production p) {
 	return p->start;
 }
+
+production production_cloner(production p) {
+	production _p = production_init();
+	_p->start = cstring_copy(p->start);
+	_p->tokens = list_copy(p->tokens, (cloner) cstring_copy);
+	return _p;
+}
+
+grammar grammar_clone(grammar g) {
+	grammar _g = grammar_init();
+
+	_g->vt = list_copy(g->vt, (cloner) cstring_copy);
+	_g->vn = list_copy(g->vn, (cloner) cstring_copy);
+	_g->s = cstring_copy(g->s);
+	_g->p = map_init(cstring_comparer, NULL);
+
+	foreach(cstring, p, map_keys(g->p)) {
+		map_set(_g->p, cstring_copy(p), production_cloner(map_get(g->p, p)));
+	}
+
+	return _g;
+}
+
+static void grammar_remove_units(grammar g, production p, map productions) {
+
+	list to_remove = list_init();
+
+
+	foreach(cstring, token, p->tokens) {
+
+		if (cstring_len(token) == 1 && token[0] != '\\' && isupper(token[0])) {
+
+			production to_solve = map_get(productions, token);
+
+			if (to_solve != p) {
+
+				grammar_remove_units(g, to_solve, productions);
+				list_add(to_remove, token);
+			}
+		}
+	}
+
+	foreachh(cstring, tr, to_remove) {
+		list_remove_item(p->tokens, tr, NULL);
+		production to_add = map_get(productions, tr);
+
+		list_add_list(p->tokens, to_add->tokens);
+	}
+}
+
+
+static cstring end_terminal = NULL;
+
+static tree generated_terminals = NULL;
+
+static int is_terminal(cstring token) {
+	int i = 0;
+	int len = cstring_len(token);
+
+	if (len >= 1) {
+		return islower(token[0]);
+	} else {
+		return islower(token[0]);
+	}
+}
+
+static void grammar_split_non_terms(grammar g, production p) {
+	foreach(cstring, token, p->tokens) {
+		if (is_terminal(token)) {
+			int len = cstring_len(token);
+			if (len == 1) {
+				if (end_terminal == NULL) {
+					end_terminal = cstring_init(2);
+					end_terminal[0] = 'M';
+
+				}
+			} else {
+
+			}
+		}
+	}
+}
+
+automatha grammar_to_automatha(grammar g) {
+	automatha a = automatha_init();
+
+	generated_terminals = tree_init(cstring_comparer);
+
+	grammar normalized = grammar_clone(g);
+
+	list productions = map_values(normalized->p);
+
+	foreach(production, p, productions) {
+		grammar_remove_units(normalized, p, normalized->p);
+	}
+
+//	foreachh(production, p, productions) {
+//		grammar_split_non_terms(normalized, p);
+//	}
+
+
+
+	grammar_print(normalized, stdout);
+
+
+	return a;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

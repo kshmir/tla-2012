@@ -9,6 +9,8 @@
 
 #include "list.h"
 
+#include "../includes.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -242,4 +244,44 @@ void * list_node_value(void * n) {
 	}
 	
 	return ((node)n)->data;
+}
+
+int list_remove_item(list l, void * p, comparer comp) {
+	int index = list_indexof(l, p, comp);
+
+	return (index == -1) ? index : list_remove(l, index);
+}
+
+int list_indexof(list l, void * p, comparer comp) {
+	comparer _c = (comp == NULL) ? pointer_comparer : comp;
+
+	int i = 0;
+	foreach(void*, _p, l) {
+		if (!_c(_p, p)) {
+			return i;
+		}
+		i++;
+	}
+	return -1;
+}
+
+
+list list_copy(list l, cloner c) {
+	list _l = list_init();
+	cloner _c = (c == NULL) ? pointer_cloner : c;
+
+	foreach(void *, p, l) {
+		list_add(_l, _c(p));
+	}
+
+	return _l;
+}
+
+int list_add_list(list l, list to_add) {
+	int i = 0;
+	foreach(void *, p , to_add) {
+		list_add(l, p);
+		i++;
+	}
+	return i;
 }

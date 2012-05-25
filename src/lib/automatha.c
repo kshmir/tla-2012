@@ -126,10 +126,7 @@ void automatha_print(automatha a, FILE * file) {
 
 
 static cstring node_to_vn(cstring node) {
-
-
 	cstring trimmed = cstring_trim(node);
-
 
 	char vn0 = 'A';
 	int size = map_size(_node_to_vn);

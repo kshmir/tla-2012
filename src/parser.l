@@ -27,12 +27,14 @@ grammar _g;
 
 ([a-zA-Z0-9]+)[ ]?=   { if (parsingGrammar) { state++; } else { REJECT; } } 
 
-(\{)?[A-Z][ ]*->[ ]*([A-Za-z\\]+\|)*[A-Za-z]+[ ]*(,)?       { 
+(\{)?[A-Z][ ]*->[ ]*([ ]*[A-Za-z\\]+[ ]*\|)*[ ]*[A-Za-z\\]+[ ]*(,)?       { 
+	
                         if (parsingGrammar && state == G_PRODUCTIONS) {
                         	cstring nokey = cstring_replace(yytext, "{", "");
                         	cstring nocomma = cstring_replace(nokey, ",", "");
                         	cstring trimmed = cstring_trim(nocomma);
                         	production p = production_from_string(trimmed);
+                        	
                         	grammar_add_production(_g, p);
                        
                         } else { REJECT; }

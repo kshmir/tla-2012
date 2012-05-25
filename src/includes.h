@@ -184,4 +184,7 @@ void * double_cloner(void * double1);
  */
 void * cstring_cloner(void * s1);
 
+
+void * pointer_cloner(void * ptr);
+
 #endif

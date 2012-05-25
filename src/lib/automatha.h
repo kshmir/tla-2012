@@ -1,12 +1,14 @@
 #ifndef _AUTOMATHA_H_
 #define _AUTOMATHA_H_
 
+typedef struct automatha * automatha;
+
 #include "../utils/cstring.h"
 #include "../utils/list.h"
 #include "grammar.h"
 #include <stdio.h>
 
-typedef struct automatha * automatha;
+
 
 /**
  * Allocates the automatha

@@ -357,5 +357,10 @@ cstring cstring_trim(cstring s) {
 	while(s[i] == ' ') i++;
 	while(s[j] == ' ') j--;
 
-	return cstring_sub(s + i, j + 1);
+
+	if (s[j] == ' ') j--;
+
+
+
+	return cstring_sub(s + i, j + 1 - i);
 }

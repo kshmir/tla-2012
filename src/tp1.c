@@ -12,6 +12,8 @@ void tp_run(int mode) {
 	switch (mode) {
 		case GRAMMAR:
 			grammar_print(_g, stdout);
+
+			grammar_to_automatha(_g);
 			break;
 		case AUTOMATHA:
 //			automatha_print(_a, stdout);

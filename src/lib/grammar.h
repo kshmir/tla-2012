@@ -1,13 +1,17 @@
 #ifndef _GRAMMAR_H_
 #define _GRAMMAR_H_
 
+typedef struct production * production;
+typedef struct grammar * grammar;
+
+#include "automatha.h"
 #include "../utils/map.h"
 #include "../utils/cstring.h"
 #include "../utils/list.h"
 
 
-typedef struct production * production;
-typedef struct grammar * grammar;
+
+
 
 
 list grammar_get_terminals(grammar g);
@@ -63,5 +67,7 @@ production production_from_string(cstring string);
 list production_get_tokens(production p);
 
 cstring production_get_start(production p);
+
+automatha grammar_to_automatha(grammar g);
 
 #endif
