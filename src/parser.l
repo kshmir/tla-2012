@@ -33,6 +33,7 @@ grammar _g;
                         	cstring nocomma = cstring_replace(nokey, ",", "");
                         	cstring trimmed = cstring_trim(nocomma);
                         	production p = production_from_string(trimmed);
+                        	grammar_add_production(_g, p);
                        
                         } else { REJECT; }
                       }
@@ -86,14 +87,7 @@ grammar _g;
 
 [ ]*\}[ ]*\)          {;
                         if (parsingGrammar && state == G_PRODUCTIONS) { 
-                          printf("Parseo exitoso\n");
-                          print_terminals(_g);
-                          print_non_terminals(_g);
-                          print_start(_g);
-                          print_is_valid(_g);
-                          print_is_regular(_g);
-                          
-                          
+                        
                         }  else { REJECT; }
                       }    
 digraph[ ]*\{         { 
