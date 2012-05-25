@@ -18,7 +18,7 @@ void tp_run(int mode) {
 			g = automatha_to_grammar(_a);
 
 			printf("END!\n");
-//			grammar_print(g, stdout);
+			grammar_print(g, stdout);
 
 			break;
 	}

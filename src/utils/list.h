@@ -27,6 +27,13 @@
 		_item != NULL && item != NULL; \
 		_item = (void *)list_node_next(_item), item = list_node_value((_item != NULL) ? _item : NULL))
 
+#define foreachh(type, item, list) \
+	_item = NULL; \
+	type   item  = NULL; \
+	for(_item = (void *)list_header(list), item = list_node_value(_item); \
+		_item != NULL && item != NULL; \
+		_item = (void *)list_node_next(_item), item = list_node_value((_item != NULL) ? _item : NULL))
+
 #define foreach_next(item) \
 		_item = (void *)list_node_next(_item); item = list_node_value((_item != NULL) ? _item : NULL);
 
@@ -54,6 +61,8 @@ void * list_get(list p, int index);
 
 // Removes an element in the given index of the list
 int list_remove(list p, int index);
+
+int list_is_last(list p, void * ptr);
 
 list list_from_ptrarray_w_count(int size, int block_size, void * ptr);
 
