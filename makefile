@@ -1,5 +1,5 @@
 tp1 : tp
-	gcc -g -lfl -m32 -o  salida target/tp.o target/lex.o \
+	gcc -g -m32 -o  salida target/tp.o target/lex.o \
 	 target/cstring.o target/map.o target/list.o target/includes.o \
 	 target/tree.o target/grammar.o target/automatha.o
 tp : clean
