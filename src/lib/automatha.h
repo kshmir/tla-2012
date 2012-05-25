@@ -31,4 +31,6 @@ void automatha_print(automatha a, FILE * file);
 
 grammar automatha_to_grammar(automatha a);
 
+void fix_productions(grammar g);
+
 #endif

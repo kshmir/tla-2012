@@ -6,6 +6,8 @@
 #include "../utils/cstring.h"
 #include "grammar.h"
 
+int is_non_terminal(grammar g, char token);
+
 struct grammar {
 	list vt; // Terminals
 	list vn; // Non terminals
@@ -63,6 +65,39 @@ static void print_is_regular(grammar g) {
 
 int grammar_is_valid(grammar g) {
 	return check_terminals(g) && check_non_terminals(g);
+}
+
+int grammar_can_become_regular(grammar g) {
+	if (grammar_is_regular(g))
+		return true;
+	int i, right = true, left = true;
+	map m = grammar_get_productions(g);
+	foreach(cstring, prod_key, map_keys(m)) {
+		if (cstring_len(prod_key) > 1)
+			return false;
+		foreach(cstring, prod_value, ((production)map_get(m, prod_key))->tokens)
+		{
+			int len = cstring_len(prod_value);
+			if (len > 2){
+				for (i = 0; i < len; i++) {
+					if (is_non_terminal(g, prod_value[i]))
+						return false;
+				}
+			}
+			if (is_non_terminal(g, prod_value[0]))
+				right = false;
+			else
+				left = false;
+			if (!left && !right)
+				return false;
+		}
+	}
+	if (right)
+		return RIGHT;
+	if (left)
+		return LEFT;
+
+	return false;
 }
 
 int is_terminal_token(grammar g, char token) {
@@ -356,44 +391,151 @@ static void grammar_remove_units(grammar g, production p, map productions) {
 }
 
 static cstring end_terminal = NULL;
+static end_terminal_i = 0;
 
-static tree generated_terminals = NULL;
+static int is_generated(char c) {
+	int i = 0;
+	for (i = 'Z' - end_terminal_i; i < 'Z' + 1; i++) {
+		if (c == i) {
+			return 1;
+		}
+	}
+	return 0;
+}
 
-static int is_terminal(cstring token) {
+static int is_generated_terminal(cstring token) {
 	int i = 0;
 	int len = cstring_len(token);
 
 	if (len >= 1) {
-		return islower(token[0]);
+		return islower(token[0]) || is_generated(token[0]);
 	} else {
 		return islower(token[0]);
 	}
 }
 
-static void grammar_split_non_terms(grammar g, production p) {
-	foreach(cstring, token, p->tokens)
-	{
-		if (is_terminal(token)) {
+static cstring get_next_end_terminal() {
+	char start = 'Z';
+
+	cstring result = cstring_init(1);
+
+	result[0] = start - (end_terminal_i++);
+
+	return result;
+}
+
+static void grammar_split_non_terms(grammar g, production p, list productions) {
+	list to_remove = list_init();
+	list to_add = list_init();
+
+	foreach(cstring, token, p->tokens) {
+		if (is_generated_terminal(token)) {
 			int len = cstring_len(token);
+			cstring nonTerm;
 			if (len == 1) {
 				if (end_terminal == NULL) {
-					end_terminal = cstring_init(2);
+					end_terminal = cstring_init(1);
 					end_terminal[0] = 'M';
-
 				}
+				nonTerm = end_terminal;
 			} else {
+				nonTerm = get_next_end_terminal();
+			}
 
+			nonTerm = cstring_write(nonTerm, " ");
+			nonTerm[1] = token[len - 1];
+
+			list_add(to_remove, token);
+			list_add(to_add, nonTerm);
+
+			token[len - 1] = 0;
+
+			production pr = production_init();
+
+			pr->start = cstring_init(1);
+			pr->start[0] = nonTerm[0];
+
+			if (cstring_len(token) > 0) {
+				list_add(pr->tokens, token);
+			} else {
+				list_add(pr->tokens, "\\");
+			}
+
+			grammar_add_non_terminal(g, pr->start);
+			grammar_add_production(g, pr);
+			list_add(productions, pr);
+		}
+	}
+
+	foreachh(cstring, tok, to_add) {
+		list_add(p->tokens, tok);
+	}
+
+	foreachh(cstring, t, to_remove)
+	{
+		list_remove_item(p->tokens, t, cstring_comparer);
+	}
+}
+
+static grammar grammar_to_left_form(grammar from, grammar to) {
+	foreach(cstring, non_terminal, grammar_get_non_terminals(from)) {
+		grammar_add_non_terminal(to, non_terminal);
+	}
+
+	foreachh(cstring, terminal, grammar_get_terminals(from)) {
+		grammar_add_terminal(to, terminal);
+	}
+
+	grammar_set_start_token(to, "M");
+
+	// A -> Ba se transoforma en B->aA
+
+	production def = production_init();
+
+	production_set_start(def, cstring_copy("A"));
+	production_add_token(def, cstring_copy("\\"));
+
+	grammar_add_production(to, def);
+
+	list productions = map_values(grammar_get_productions(from));
+	foreachh(production, prod, productions) {
+		foreach_(cstring, token, production_get_tokens(prod))
+		{
+			if (cstring_compare(token, "\\") != 0) {
+				int is_new = 0;
+				production new_prod = NULL;
+				cstring new_start = cstring_init(1);
+				new_start[0] = token[0];
+
+				if (map_get(grammar_get_productions(to), new_start) == NULL) {
+					new_prod = production_init();
+					production_set_start(new_prod, new_start);
+					is_new = 1;
+				} else {
+					new_prod = map_get(grammar_get_productions(to), new_start);
+				}
+
+				cstring new_token = cstring_init(2);
+
+				new_token[0] = token[1];
+				new_token[1] = prod->start[0];
+
+				production_add_token(new_prod, new_token);
+
+				if (is_new) {
+					grammar_add_production(to, new_prod);
+				}
 			}
 		}
 	}
+	return to;
 }
 
 automatha grammar_to_automatha(grammar g) {
 	automatha a = automatha_init();
 
-	generated_terminals = tree_init(cstring_comparer);
-
 	grammar normalized = grammar_clone(g);
+	grammar lefted = grammar_init();
 
 	list productions = map_values(normalized->p);
 
@@ -401,12 +543,44 @@ automatha grammar_to_automatha(grammar g) {
 		grammar_remove_units(normalized, p, normalized->p);
 	}
 
-	//	foreachh(production, p, productions) {
-	//		grammar_split_non_terms(normalized, p);
-	//	}
-
-
 	grammar_print(normalized, stdout);
+
+	int regularity = grammar_is_regular(normalized);
+
+	if (regularity == 0) {
+		printf("---INV---\n");
+		return NULL;
+	}
+
+	if (regularity == LEFT) {
+		printf("---IZQ---\n");
+		foreachh(production, _p, productions) {
+			grammar_split_non_terms(normalized, _p, productions);
+		}
+
+		lefted = grammar_to_left_form(normalized, lefted);
+	} else {
+		printf("---DER---\n");
+		lefted = normalized;
+	}
+
+	fix_productions(lefted);
+
+	productions = map_values(lefted->p);
+
+	foreachh(production, prod, productions) {
+		automatha_add_node(a, (cstring_compare(prod->start, "A") == 0) ? 1 : 0,
+				prod->start, prod->start);
+		foreach_(cstring, token, prod->tokens)
+		{
+			cstring to, _token;
+			to = cstring_init(1);
+			_token = cstring_init(1);
+			to[0] = token[1];
+			_token[0] = token[0];
+			automatha_add_transition(a, prod->start, to, _token);
+		}
+	}
 
 	return a;
 }
