@@ -125,7 +125,7 @@ doublecircle          {
 					  }
 \[label=\"            { if (parsingAutomatha && state == A_STATE_LABEL_START) { state = A_STATE_LABEL_END; } 
                    else if (parsingAutomatha && state == A_TRANS_MATCH) { state = A_TRANS_LABEL_START; } else { REJECT; } }
-[A-Za-z0-9]+        { 
+[A-Za-z0-9\\]+        { 
 						if (parsingAutomatha && state == A_STATE_LABEL_END) 
 						{ 
 							automatha_state_label = cstring_copy(yytext);

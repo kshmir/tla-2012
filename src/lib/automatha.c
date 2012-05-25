@@ -4,6 +4,7 @@
 #include "../utils/cstring.h"
 #include "../utils/tree.h"
 #include "automatha.h"
+#include <ctype.h>
 
 typedef struct state * state;
 typedef struct transition * transition;
@@ -127,19 +128,26 @@ void automatha_print(automatha a, FILE * file) {
 static cstring node_to_vn(cstring node) {
 
 
+	cstring trimmed = cstring_trim(node);
+
+
 	char vn0 = 'A';
 	int size = map_size(_node_to_vn);
 
-	if (map_get(_node_to_vn, node) == NULL) {
+	if (map_get(_node_to_vn, trimmed) == NULL) {
 		cstring converted = cstring_init(1);
 		converted[0] = vn0 + size;
 
-		map_set(_node_to_vn, node, converted);
+		map_set(_node_to_vn, trimmed, converted);
 	}
 
+	cstring result = map_get(_node_to_vn, trimmed);
 
+//	cstring_free(trimmed);
 
-	return map_get(_node_to_vn, node);
+//	printf("node_to_vn: .%s.%s.\n", trimmed, result);
+
+	return result;
 }
 
 
@@ -147,6 +155,7 @@ static void store_non_terminals(grammar g, tree non_terminals) {
 	list l = tree_to_list(non_terminals);
 
 	foreach(cstring, t, l) {
+		printf("nonterm: .%s.\n", t);
 		grammar_add_non_terminal(g, t);
 	}
 }
@@ -155,7 +164,32 @@ static void store_terminals(grammar g, tree terminals) {
 	list l = tree_to_list(terminals);
 
 	foreach(cstring, t, l) {
+		printf("term: .%s.\n", t);
 		grammar_add_terminal(g, t);
+	}
+}
+
+// Fixes production references for the grammar
+static void fix_productions(grammar g) {
+	cstring q = cstring_init(1);
+	map productions = grammar_get_productions(g);
+	list production_values = map_values(productions);
+	foreach(production, p, production_values) {
+		list tokens = production_get_tokens(p);
+		foreach(cstring, token, tokens) {
+			cstring new_token = cstring_init(0);
+			int i = 0;
+			int len = cstring_len(token);
+			for (i = 0; i < len; ++i) {
+				q[0] = token[i];
+				if (islower(q[0]) || map_get(productions, q) != NULL) {
+					new_token = cstring_write(new_token, q);
+				}
+			}
+
+			token = new_token;
+			printf("%s->%s\n", production_get_start(p), token);
+		}
 	}
 }
 
@@ -179,19 +213,37 @@ grammar automatha_to_grammar(automatha a) {
 	list states = map_values(a->states);
 
 
+	map productions = grammar_get_productions(g);
+
 	foreach(state, s, states) {
 		if (i == 0) {
+
 			grammar_set_start_token(g, node_to_vn(s->name));
+			printf("s: .%s.\n", grammar_get_start(g));
 		}
 
 
 		tree_add(set_of_non_terminals, node_to_vn(s->name));
 
 		foreach_(transition, t, s->transitions) {
-			cstring production = cstring_init(2);
-			production[0] = t->token[0];
-			production[1] = node_to_vn(t->to)[0];
+			int is_new = 0;
+			cstring prodtok = cstring_init(2);
+			prodtok[0] = t->token[0];
+			prodtok[1] = node_to_vn(t->to)[0];
 
+			production p = map_get(productions, node_to_vn(s->name));
+
+			if (p == NULL) {
+				p = production_init();
+				is_new = 1;
+			}
+
+			production_set_start(p, node_to_vn(s->name));
+			production_add_token(p, prodtok);
+
+			if (is_new) {
+				grammar_add_production(g, p);
+			}
 
 			tree_add(set_of_terminals, t->token);
 			tree_add(set_of_non_terminals, node_to_vn(t->to));
@@ -203,6 +255,8 @@ grammar automatha_to_grammar(automatha a) {
 	store_non_terminals(g, set_of_non_terminals);
 
 	store_terminals(g, set_of_terminals);
+
+	fix_productions(g);
 
 	return g;
 }

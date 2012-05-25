@@ -142,6 +142,9 @@ void grammar_add_production(grammar g, production production) {
 
 void grammar_print(grammar g, FILE * file) {
 	fprintf(file, "G1 = (");
+
+
+
 }
 
 production production_init() {
