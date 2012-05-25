@@ -5,6 +5,26 @@
 #include "utils/cstring.h"
 #include "tp1.h"
 
+void tp_run(int mode) {
+	FILE * file = stdout;
+
+	grammar g;
+	switch (mode) {
+		case GRAMMAR:
+			grammar_print(_g, stdout);
+			break;
+		case AUTOMATHA:
+//			automatha_print(_a, stdout);
+			g = automatha_to_grammar(_a);
+
+			printf("END!\n");
+//			grammar_print(g, stdout);
+
+			break;
+	}
+}
+
+
 void run(int len, char ** args) {
 	if (len == 2) {
 		char * input = args[1];
@@ -25,10 +45,12 @@ void run(int len, char ** args) {
 
 		if (ready_to_read) {
 			yylex();
-			// run();
+			tp_run(ready_to_read);
 		}
 	}
 }
+
+
 
 void start_adts(int mode) {
 	switch (mode) {

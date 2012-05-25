@@ -1,9 +1,5 @@
 tp1 : tp
-<<<<<<< Updated upstream
 	gcc -o salida target/tp.o target/lex.o \
-=======
-	gcc  -lfl -o salida target/lex.o target/tp.o \
->>>>>>> Stashed changes
 	 target/cstring.o target/map.o target/list.o target/includes.o \
 	 target/tree.o target/grammar.o target/automatha.o
 tp : clean
@@ -23,10 +19,6 @@ clean:
 	rm -rf target
 	rm -f src/lex.gen.c
 all : tp
-<<<<<<< Updated upstream
 	gcc -o salida target/lex.o target/tp.o target/cstring.o \
-=======
-	gcc -lfl -o salida target/lex.o target/tp.o target/cstring.o \
->>>>>>> Stashed changes
 	target/map.o target/list.o target/includes.o target/tree.o \
 	target/grammar.o target/automatha.o
