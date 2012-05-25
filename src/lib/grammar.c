@@ -140,8 +140,54 @@ void grammar_add_production(grammar g, production production) {
 	map_set(g->p, production->start, production);
 }
 
+#define next_step()  if (j != len - 1) {\
+						fprintf(file, ",");\
+						} j++;
+
 void grammar_print(grammar g, FILE * file) {
-	fprintf(file, "G1 = (");
+	fprintf(file, "G1 = ({");
+
+	int j = 0;
+	int len = list_size(g->vn);
+	foreach(cstring, vn, g->vn) {
+		fprintf(file,"%s", vn);
+		next_step();
+	}
+
+	fprintf(file, "},{");
+
+	j = 0;
+	len = list_size(g->vt);
+	foreachh(cstring, vt, g->vt) {
+		fprintf(file,"%s", vt);
+		next_step();
+	}
+
+	fprintf(file, "},");
+	fprintf(file, "%s", g->s);
+	fprintf(file, ",{");
+
+	list productions = map_values(g->p);
+
+	j = 0;
+	len = list_size(productions);
+	foreachh(production, p, productions) {
+		fprintf(file,"%s->", p->start);
+		int i = 0;
+		int lenn = list_size(p->tokens);
+		for (i = 0; i < lenn; ++i) {
+			fprintf(file,"%s", (char *)list_get(p->tokens, i));
+			if (len - 1 != i) {
+				fprintf(file,"|");
+			}
+		}
+
+		next_step();
+	}
+
+
+	fprintf(file, "})");
+
 
 
 

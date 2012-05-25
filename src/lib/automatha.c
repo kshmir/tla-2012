@@ -187,8 +187,14 @@ static void fix_productions(grammar g) {
 				}
 			}
 
-			token = new_token;
-			printf("%s->%s\n", production_get_start(p), token);
+			for (i = 0; i < len; ++i) {
+				if (i < cstring_len(new_token)) {
+					token[i] = new_token[i];
+				} else token[i] = 0;
+			}
+
+
+			printf("%s->%s\n", token, new_token);
 		}
 	}
 }
@@ -226,26 +232,39 @@ grammar automatha_to_grammar(automatha a) {
 		tree_add(set_of_non_terminals, node_to_vn(s->name));
 
 		foreach_(transition, t, s->transitions) {
-			int is_new = 0;
-			cstring prodtok = cstring_init(2);
-			prodtok[0] = t->token[0];
-			prodtok[1] = node_to_vn(t->to)[0];
+			int j = 0;
 
-			production p = map_get(productions, node_to_vn(s->name));
+			list tokens = cstring_split_list(t->token, "/");
 
-			if (p == NULL) {
-				p = production_init();
-				is_new = 1;
+			for (j = 0; j < list_size(tokens); ++j) {
+				int is_new = 0;
+				cstring prodtok = cstring_init(2);
+				cstring tok = list_get(tokens, j);
+				prodtok[0] = tok[0];
+				prodtok[1] = node_to_vn(t->to)[0];
+
+				production p = map_get(productions, node_to_vn(s->name));
+
+				if (p == NULL) {
+					p = production_init();
+					is_new = 1;
+				}
+
+				production_set_start(p, node_to_vn(s->name));
+				production_add_token(p, prodtok);
+
+				if (is_new) {
+					grammar_add_production(g, p);
+				}
+
+				if (prodtok[0] != '\\') {
+					tree_add(set_of_terminals, tok);
+				}
+
 			}
 
-			production_set_start(p, node_to_vn(s->name));
-			production_add_token(p, prodtok);
 
-			if (is_new) {
-				grammar_add_production(g, p);
-			}
 
-			tree_add(set_of_terminals, t->token);
 			tree_add(set_of_non_terminals, node_to_vn(t->to));
 		}
 		i++;
