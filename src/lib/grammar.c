@@ -6,8 +6,6 @@
 #include "../utils/cstring.h"
 #include "grammar.h"
 
-int is_non_terminal(grammar g, char token);
-
 struct grammar {
 	list vt; // Terminals
 	list vn; // Non terminals
@@ -67,6 +65,27 @@ int grammar_is_valid(grammar g) {
 	return check_terminals(g) && check_non_terminals(g);
 }
 
+int is_terminal_token(grammar g, char token) {
+	if (token == '\\') {
+		return true;
+	}
+	foreach(cstring, gram_term, grammar_get_terminals(g)) {
+		if (gram_term[0] == token) {
+			return true;
+		}
+	}
+	return false;
+}
+
+int is_non_terminal(grammar g, char token) {
+	foreach(cstring, gram_not_term, grammar_get_non_terminals(g)) {
+		if (gram_not_term[0] == token) {
+			return true;
+		}
+	}
+	return false;
+}
+
 int grammar_can_become_regular(grammar g) {
 	if (grammar_is_regular(g))
 		return true;
@@ -100,26 +119,6 @@ int grammar_can_become_regular(grammar g) {
 	return false;
 }
 
-int is_terminal_token(grammar g, char token) {
-	if (token == '\\') {
-		return true;
-	}
-	foreach(cstring, gram_term, grammar_get_terminals(g)) {
-		if (gram_term[0] == token) {
-			return true;
-		}
-	}
-	return false;
-}
-
-int is_non_terminal(grammar g, char token) {
-	foreach(cstring, gram_not_term, grammar_get_non_terminals(g)) {
-		if (gram_not_term[0] == token) {
-			return true;
-		}
-	}
-	return false;
-}
 
 int check_non_terminals(grammar g) {
 	int flag = false;
@@ -393,9 +392,10 @@ static void grammar_remove_units(grammar g, production p, map productions) {
 static cstring end_terminal = NULL;
 static end_terminal_i = 0;
 
+
 static int is_generated(char c) {
 	int i = 0;
-	for (i = 'Z' - end_terminal_i; i < 'Z' + 1; i++) {
+	for(i = 'Z' - end_terminal_i; i < 'Z' + 1; i++) {
 		if (c == i) {
 			return 1;
 		}
@@ -414,12 +414,14 @@ static int is_generated_terminal(cstring token) {
 	}
 }
 
+
+
 static cstring get_next_end_terminal() {
 	char start = 'Z';
 
 	cstring result = cstring_init(1);
 
-	result[0] = start - (end_terminal_i++);
+	result[0] = start - ( end_terminal_i++ );
 
 	return result;
 }
@@ -461,7 +463,8 @@ static void grammar_split_non_terms(grammar g, production p, list productions) {
 				list_add(pr->tokens, "\\");
 			}
 
-			grammar_add_non_terminal(g, pr->start);
+
+			grammar_add_non_terminal(g,pr->start);
 			grammar_add_production(g, pr);
 			list_add(productions, pr);
 		}
@@ -471,11 +474,11 @@ static void grammar_split_non_terms(grammar g, production p, list productions) {
 		list_add(p->tokens, tok);
 	}
 
-	foreachh(cstring, t, to_remove)
-	{
+	foreachh(cstring, t, to_remove) {
 		list_remove_item(p->tokens, t, cstring_comparer);
 	}
 }
+
 
 static grammar grammar_to_left_form(grammar from, grammar to) {
 	foreach(cstring, non_terminal, grammar_get_non_terminals(from)) {
@@ -497,10 +500,10 @@ static grammar grammar_to_left_form(grammar from, grammar to) {
 
 	grammar_add_production(to, def);
 
+
 	list productions = map_values(grammar_get_productions(from));
 	foreachh(production, prod, productions) {
-		foreach_(cstring, token, production_get_tokens(prod))
-		{
+		foreach_(cstring, token, production_get_tokens(prod)) {
 			if (cstring_compare(token, "\\") != 0) {
 				int is_new = 0;
 				production new_prod = NULL;
@@ -552,6 +555,7 @@ automatha grammar_to_automatha(grammar g) {
 		return NULL;
 	}
 
+
 	if (regularity == LEFT) {
 		printf("---IZQ---\n");
 		foreachh(production, _p, productions) {
@@ -569,10 +573,8 @@ automatha grammar_to_automatha(grammar g) {
 	productions = map_values(lefted->p);
 
 	foreachh(production, prod, productions) {
-		automatha_add_node(a, (cstring_compare(prod->start, "A") == 0) ? 1 : 0,
-				prod->start, prod->start);
-		foreach_(cstring, token, prod->tokens)
-		{
+		automatha_add_node(a, (cstring_compare(prod->start, "A") == 0) ? 1 : 0, prod->start, prod->start);
+		foreach_(cstring, token, prod->tokens) {
 			cstring to, _token;
 			to = cstring_init(1);
 			_token = cstring_init(1);
