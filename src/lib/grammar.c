@@ -21,7 +21,10 @@ enum boolean {
 	false, true
 };
 
-void print_terminals(grammar g) {
+#define RIGHT 1
+#define LEFT 2
+
+static void print_terminals(grammar g) {
 	printf("Simbolos Terminales: ");
 	foreach(cstring, token, grammar_get_terminals(g)) {
 		printf("%s,", token);
@@ -29,7 +32,7 @@ void print_terminals(grammar g) {
 	printf("\n");
 }
 
-void print_non_terminals(grammar g) {
+static void print_non_terminals(grammar g) {
 	printf("Simbolos No Terminales: ");
 	foreach(cstring, token, grammar_get_non_terminals(g)) {
 		printf("%s,", token);
@@ -37,58 +40,109 @@ void print_non_terminals(grammar g) {
 	printf("\n");
 }
 
-void print_start(grammar g) {
+static void print_start(grammar g) {
 	printf("Simbolo Inicial: %s\n", grammar_get_start(g));
 }
 
-void print_is_valid(grammar g) {
+static void print_is_valid(grammar g) {
 	grammar_is_valid(g) ? printf("Gramatica Valida\n") : printf(
 			"Gramatica Invalida\n");
 }
 
 int grammar_is_valid(grammar g) {
-	return check_terminals(g);// && check_non_terminals(g);
+	return check_terminals(g) && check_non_terminals(g);
+}
+
+int is_terminal(grammar g, char token) {
+	foreach(cstring, gram_term, grammar_get_terminals(g)) {
+		if (gram_term[0] == token) {
+			return true;
+		}
+	}
+	return false;
+}
+
+int is_non_terminal(grammar g, char token) {
+	foreach(cstring, gram_not_term, grammar_get_non_terminals(g)) {
+		if (gram_not_term[0] == token) {
+			return true;
+		}
+	}
+	return false;
 }
 
 int check_non_terminals(grammar g) {
 	int flag = false;
-	foreach(cstring, prod_token, map_values(grammar_get_productions(g)))
-	{
+	int i, j;
+	map m = grammar_get_productions(g);
+	foreach(cstring, prod_key, map_keys(m)) {
+		foreach(cstring, prod_value, ((production)map_get(m, prod_key))->tokens)
 		{
-			flag = false;
-			foreach(cstring, gram_not_term, grammar_get_non_terminals(g))
-				if (strcmp(gram_not_term, prod_token)) {
-					flag = true;
+			i = cstring_len(prod_value);
+			for (j = 0; j < i; j++) {
+				flag = false;
+				flag = is_non_terminal(g, prod_value[j]);
+				if (!flag)
+					flag = is_terminal(g, prod_value[j]);
+				if (!flag) {
+					return false;
 				}
+			}
 		}
-		if (!flag) {
-			return false;
-		}
-		return true;
 	}
+	return true;
 }
 
 int check_terminals(grammar g) {
 	int flag = false;
-	map p = grammar_get_productions(g);
-	foreach(cstring, prod_token, map_values(p))
-	{
-		{
+	int i, j;
+	foreach(cstring, prod_token, map_keys(grammar_get_productions(g))) {
+		i = cstring_len(prod_token);
+		for (j = 0; j < i; j++) {
+			printf("token:%c\n", prod_token[j]);
 			flag = false;
-			foreach(cstring, gram_not_term, grammar_get_terminals(g))
-				if (strcmp(gram_not_term, prod_token)) {
-					flag = true;
-				}
+			flag = is_non_terminal(g, prod_token[j]);
+			if (!flag)
+				flag = is_terminal(g, prod_token[j]);
+			if (!flag) {
+				return false;
+			}
 		}
-		if (!flag) {
-			return false;
-		}
-		return true;
 	}
+	return true;
 }
 
 void print_is_regular(grammar g) {
+	int reg = grammar_is_regular(g);
+	reg ? printf("La gramatica es regular %s\n",
+			reg == RIGHT ? "derecha" : "izquierda") : printf(
+			"La gramatica no es regular\n");
+}
 
+int grammar_is_regular(grammar g) {
+	int right = true, left = true;
+	map m = grammar_get_productions(g);
+	foreach(cstring, prod_key, map_keys(m)) {
+		if (cstring_len(prod_key) > 1)
+			return false;
+		foreach(cstring, prod_value, ((production)map_get(m, prod_key))->tokens)
+		{
+			if (cstring_len(prod_value) > 2)
+				return false;
+			if (is_non_terminal(g, prod_value[0]))
+				right = false;
+			else
+				left = false;
+			if (!left && !right)
+				return false;
+		}
+	}
+	if (right)
+		return RIGHT;
+	if (left)
+		return LEFT;
+
+	return false;
 }
 
 list grammar_get_terminals(grammar g) {
@@ -145,12 +199,18 @@ void grammar_add_production(grammar g, production production) {
 						} j++;
 
 void grammar_print(grammar g, FILE * file) {
+	printf("Parseo exitoso\n");
+	print_terminals(g);
+	print_non_terminals(g);
+	print_start(g);
+	print_is_valid(g);
+	print_is_regular(g);
 	fprintf(file, "G1 = ({");
 
 	int j = 0;
 	int len = list_size(g->vn);
 	foreach(cstring, vn, g->vn) {
-		fprintf(file,"%s", vn);
+		fprintf(file, "%s", vn);
 		next_step();
 	}
 
@@ -159,7 +219,7 @@ void grammar_print(grammar g, FILE * file) {
 	j = 0;
 	len = list_size(g->vt);
 	foreachh(cstring, vt, g->vt) {
-		fprintf(file,"%s", vt);
+		fprintf(file, "%s", vt);
 		next_step();
 	}
 
@@ -172,24 +232,20 @@ void grammar_print(grammar g, FILE * file) {
 	j = 0;
 	len = list_size(productions);
 	foreachh(production, p, productions) {
-		fprintf(file,"%s->", p->start);
+		fprintf(file, "%s->", p->start);
 		int i = 0;
 		int lenn = list_size(p->tokens);
 		for (i = 0; i < lenn; ++i) {
-			fprintf(file,"%s", (char *)list_get(p->tokens, i));
+			fprintf(file, "%s", (char *) list_get(p->tokens, i));
 			if (len - 1 != i) {
-				fprintf(file,"|");
+				fprintf(file, "|");
 			}
 		}
 
 		next_step();
 	}
 
-
 	fprintf(file, "})");
-
-
-
 
 }
 
