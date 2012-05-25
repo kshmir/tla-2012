@@ -27,7 +27,7 @@ grammar _g;
 
 ([a-zA-Z0-9]+)[ ]?=   { if (parsingGrammar) { state++; } else { REJECT; } } 
 
-(\{)?[A-Z][ ]*->[ ]*([ ]*[A-Za-z\\]+[ ]*\|)*[ ]*[A-Za-z\\]+[ ]*(,)?       { 
+(\{)?[A-Z\\][ ]*->[ ]*([ ]*[A-Za-z\\]+[ ]*\|)*[ ]*[A-Za-z\\]+[ ]*(,)?       { 
 	
                         if (parsingGrammar && state == G_PRODUCTIONS) {
                         	cstring nokey = cstring_replace(yytext, "{", "");
