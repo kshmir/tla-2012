@@ -83,7 +83,7 @@ void production_set_start(production p, cstring start) {
 	p->start = cstring_copy(start);
 }
 
-void production_add_token(production p, list token) {
+void production_add_token(production p, cstring token) {
 	list_add(p->tokens, token);
 }
 

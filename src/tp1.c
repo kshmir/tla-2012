@@ -8,12 +8,18 @@
 void tp_run(int mode) {
 	FILE * file = stdout;
 
+	grammar g;
 	switch (mode) {
 		case GRAMMAR:
 			grammar_print(_g, stdout);
 			break;
 		case AUTOMATHA:
-			automatha_print(_a, stdout);
+//			automatha_print(_a, stdout);
+			g = automatha_to_grammar(_a);
+
+			printf("END!\n");
+//			grammar_print(g, stdout);
+
 			break;
 	}
 }

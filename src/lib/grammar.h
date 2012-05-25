@@ -56,7 +56,7 @@ void production_set_start(production p, cstring start);
  * Tokens should be a list of elements which belong to the grammar.
  * Like a->b->A (represents the production A->abA when A is the token A of the production)
  */
-void production_add_token(production p, list token);
+void production_add_token(production p, cstring token);
 
 production production_from_string(cstring string);
 
