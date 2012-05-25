@@ -103,6 +103,11 @@ static void automatha_print_transitions(automatha a, FILE * file) {
 		list transitions = s->transitions;
 
 		foreach_(transition, t, transitions) {
+
+			if (strcmp(t->to, "") == 0) {
+				continue;
+			}
+
 			fprintf(file, "\t%s->%s [label=\"%s\"];\n", s->name, t->to, t->token);
 		}
 
@@ -167,7 +172,7 @@ static void store_terminals(grammar g, tree terminals) {
 }
 
 // Fixes production references for the grammar
-static void fix_productions(grammar g) {
+void fix_productions(grammar g) {
 	cstring q = cstring_init(1);
 	map productions = grammar_get_productions(g);
 	list production_values = map_values(productions);
@@ -179,7 +184,7 @@ static void fix_productions(grammar g) {
 			int len = cstring_len(token);
 			for (i = 0; i < len; ++i) {
 				q[0] = token[i];
-				if (islower(q[0]) || map_get(productions, q) != NULL) {
+				if (islower(q[0]) || map_get(productions, q) != NULL || q[0] == '\\') {
 					new_token = cstring_write(new_token, q);
 				}
 			}
@@ -189,9 +194,6 @@ static void fix_productions(grammar g) {
 					token[i] = new_token[i];
 				} else token[i] = 0;
 			}
-
-
-			printf("%s->%s\n", token, new_token);
 		}
 	}
 }

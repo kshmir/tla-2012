@@ -13,13 +13,14 @@ void tp_run(int mode) {
 		case GRAMMAR:
 			grammar_print(_g, stdout);
 
-			grammar_to_automatha(_g);
+			automatha a = grammar_to_automatha(_g);
+
+			automatha_print(a, stdout);
 			break;
 		case AUTOMATHA:
 //			automatha_print(_a, stdout);
 			g = automatha_to_grammar(_a);
 
-			printf("END!\n");
 			grammar_print(g, stdout);
 
 			break;
