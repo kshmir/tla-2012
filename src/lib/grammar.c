@@ -107,7 +107,7 @@ int grammar_can_become_regular(grammar g) {
 			} else {
 				if (is_non_terminal(g, prod_value[0]))
 					right = false;
-				else if (prod_value[0] != '\\' && cstring_len(prod_value) > 1) {
+				else if (prod_value[0] != '\\' && is_non_terminal(g, prod_value[1])) {
 					left = false;
 				}
 				if (!left && !right)
@@ -175,10 +175,15 @@ int grammar_is_regular(grammar g) {
 		{
 			if (cstring_len(prod_value) > 2)
 				return false;
-			if (is_non_terminal(g, prod_value[0]))
-				right = false;
-			else
-				left = false;
+			if (cstring_len(prod_value) == 2) {
+				if (is_non_terminal(g, prod_value[0]))
+					right = false;
+				else if (is_non_terminal(g, prod_value[1]))
+					left = false;
+				else if (is_terminal_token(g, prod_value[0]) && is_terminal_token(g, prod_value[1])) {
+					return false;
+				}
+			}
 			if (!left && !right)
 				return false;
 		}
@@ -497,17 +502,21 @@ static void grammar_split_non_terms(grammar g, production p, list productions, i
 
 			cstring new_token = cstring_copy(token);
 
-			new_token[len - 1] = 0;
+			if (mode == LEFT) {
+				new_token[len - 1] = 0;
+			} else {
+				new_token = cstring_copy(token + 1);
+			}
 
 			production pr = NULL;
 			cstring _st = cstring_init(1);
 
 			if (mode == RIGHT) {
 				_st[0] = nonTerm[len];
-			} if (mode == POST_PASS) {
+			} else if (mode == POST_PASS) {
 				_st[0] = 'M';
 			} else {
-				_st[0] = nonTerm[len];
+				_st[0] = nonTerm[0];
 			}
 
 
@@ -667,9 +676,15 @@ automatha grammar_to_automatha(grammar g) {
 	}
 
 	if (regularity == LEFT) {
+		printf("is left");
 		foreachh(production, _p, productions) {
+			grammar_print(normalized, stdout);
+			printf("\n");
 			grammar_split_non_terms(normalized, _p, productions, LEFT);
+
 		}
+		printf("\n");
+		grammar_print(normalized, stdout);
 
 		lefted = grammar_to_right_form(normalized, lefted);
 
@@ -683,6 +698,7 @@ automatha grammar_to_automatha(grammar g) {
 			}
 		}
 	} else {
+		printf("is right");
 		foreachh(production, _p, productions) {
 			grammar_split_non_terms(normalized, _p, productions, RIGHT);
 		}

@@ -4,3 +4,5 @@ salida
 src/lex.gen.c
 .project
 .cproject
+salida.png
+.tmp
