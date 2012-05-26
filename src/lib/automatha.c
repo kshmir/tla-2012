@@ -9,6 +9,10 @@
 typedef struct state * state;
 typedef struct transition * transition;
 
+enum boolean {
+	false, true
+};
+
 /**
  * Structure representation of the automatha.
  */
@@ -49,7 +53,6 @@ struct transition {
 	cstring token;
 };
 
-
 static map _node_to_vn = NULL;
 
 automatha automatha_init() {
@@ -79,8 +82,8 @@ void automatha_add_node(automatha g, int final, cstring name, cstring label) {
 	map_set(g->states, name, s);
 }
 
-
-void automatha_add_transition(automatha g, cstring from, cstring to, cstring token) {
+void automatha_add_transition(automatha g, cstring from, cstring to,
+		cstring token) {
 	transition t = transition_init(to, token);
 	state s = map_get(g->states, from);
 	list_add(s->transitions, t);
@@ -90,7 +93,8 @@ static void automatha_print_states(automatha a, FILE * file) {
 	list states = map_values(a->states);
 
 	foreach(state, s, states) {
-		fprintf(file, "\tnode[shape=%s] %s [label=\"%s\"]\n", (s->is_final) ? "doublecircle" : "circle", s->name, s->label);
+		fprintf(file, "\tnode[shape=%s] %s [label=\"%s\"]\n",
+				(s->is_final) ? "doublecircle" : "circle", s->name, s->label);
 	}
 
 	list_free(states);
@@ -108,7 +112,8 @@ static void automatha_print_transitions(automatha a, FILE * file) {
 				continue;
 			}
 
-			fprintf(file, "\t%s->%s [label=\"%s\"];\n", s->name, t->to, t->token);
+			fprintf(file, "\t%s->%s [label=\"%s\"];\n", s->name, t->to,
+					t->token);
 		}
 
 		list_free(transitions);
@@ -127,8 +132,103 @@ void automatha_print(automatha a, FILE * file) {
 	fprintf(file, "}\n");
 }
 
+static void print_states(automatha a, FILE * file) {
+	fprintf(file, "Estados: ");
+	foreach(state, st, map_values(a->states)) {
+		fprintf(file, "%s, ", st->label);
+	}
+	fprintf(file, "\n");
+}
 
+static void print_terminals(automatha a, FILE * file) {
+	fprintf(file, "Estados Finales: ");
+	foreach(state, st, map_values(a->states)) {
+		if (st->is_final)
+			fprintf(file, "%s, ", st->label);
+	}
+	fprintf(file, "\n");
+}
 
+static void print_first_state(automatha a, FILE * file) {
+	int flag = true;
+	fprintf(file, "Estado Inicial: ");
+	foreach_(state, st, map_values(a->states)) {
+		if (flag) {
+			fprintf(file, "%s", st->label);
+			flag = false;
+		}
+	}
+	fprintf(file, "\n");
+}
+
+static void print_terminal_symbols(automatha a, FILE * file) {
+	fprintf(file, "Simbolos Terminales: ");
+	tree t = tree_init(cstring_comparer);
+	foreach(state, st, map_values(a->states)) {
+		foreach(transition, trans, st->transitions)
+		{
+			tree_add(t, trans->token);
+		}
+	}
+	foreachh(cstring, token, tree_to_list(t)) {
+		fprintf(file, "%s, ", token);
+	}
+	fprintf(file, "\n");
+}
+
+void print_check_label(automatha a, transition t, FILE * file) {
+	foreach(state, s, map_values(a->states))
+	{
+		if (!cstring_compare(s->name, cstring_trim(t->to))) {
+			fprintf(file, " %s |", s->label);
+			return;
+		}
+	}
+}
+
+static void print_table(automatha a, FILE * file) {
+	list l = list_init();
+	tree t = tree_init(cstring_comparer);
+	int i, size;
+	foreach(state, st, map_values(a->states)) {
+		foreach_(transition, trans, st->transitions)
+		{
+			tree_add(t, trans->token);
+		}
+	}
+	l = tree_to_list(t);
+	size = list_size(l);
+
+	fprintf(file, "   |");
+	foreachh(cstring, token, l) {
+		fprintf(file, " %s |", token);
+	}
+	fprintf(file, "\n");
+
+	foreachh(state, stat, map_values(a->states)) {
+		fprintf(file, " %s |", stat->label);
+		i = 0;
+		foreach_(transition, t, stat->transitions) {
+			while (t->token != list_get(l, i) && i < size) {
+				fprintf(file, "   |");
+				i++;
+			}
+			print_check_label(a, t, file);
+			i++;
+		}
+		fprintf(file, "\n");
+	}
+	fprintf(file, "\n");
+}
+
+void automatha_print_info(automatha a, FILE * file) {
+
+	print_terminal_symbols(a, file);
+	print_states(a, file);
+	print_first_state(a, file);
+	print_terminals(a, file);
+	print_table(a, file);
+}
 
 static cstring node_to_vn(cstring node) {
 	cstring trimmed = cstring_trim(node);
@@ -145,18 +245,18 @@ static cstring node_to_vn(cstring node) {
 
 	cstring result = map_get(_node_to_vn, trimmed);
 
-//	cstring_free(trimmed);
+	//	cstring_free(trimmed);
 
-//	printf("node_to_vn: .%s.%s.\n", trimmed, result);
+	//	printf("node_to_vn: .%s.%s.\n", trimmed, result);
 
 	return result;
 }
 
-
 static void store_non_terminals(grammar g, tree non_terminals) {
 	list l = tree_to_list(non_terminals);
 
-	foreach(cstring, t, l) {
+	foreach(cstring, t, l)
+	{
 		grammar_add_non_terminal(g, t);
 	}
 }
@@ -164,7 +264,8 @@ static void store_non_terminals(grammar g, tree non_terminals) {
 static void store_terminals(grammar g, tree terminals) {
 	list l = tree_to_list(terminals);
 
-	foreach(cstring, t, l) {
+	foreach(cstring, t, l)
+	{
 		grammar_add_terminal(g, t);
 	}
 }
@@ -174,15 +275,18 @@ void fix_productions(grammar g) {
 	cstring q = cstring_init(1);
 	map productions = grammar_get_productions(g);
 	list production_values = map_values(productions);
-	foreach(production, p, production_values) {
+	foreach(production, p, production_values)
+	{
 		list tokens = production_get_tokens(p);
-		foreach(cstring, token, tokens) {
+		foreach(cstring, token, tokens)
+		{
 			cstring new_token = cstring_init(0);
 			int i = 0;
 			int len = cstring_len(token);
 			for (i = 0; i < len; ++i) {
 				q[0] = token[i];
-				if (islower(q[0]) || map_get(productions, q) != NULL || q[0] == '\\') {
+				if (islower(q[0]) || map_get(productions, q) != NULL || q[0]
+						== '\\') {
 					new_token = cstring_write(new_token, q);
 				}
 			}
@@ -190,7 +294,8 @@ void fix_productions(grammar g) {
 			for (i = 0; i < len; ++i) {
 				if (i < cstring_len(new_token)) {
 					token[i] = new_token[i];
-				} else token[i] = 0;
+				} else
+					token[i] = 0;
 			}
 		}
 	}
@@ -202,8 +307,6 @@ grammar automatha_to_grammar(automatha a) {
 		_node_to_vn = map_init(cstring_comparer, NULL);
 	}
 
-
-
 	grammar g = grammar_init();
 	tree set_of_terminals = tree_init(cstring_comparer);
 	tree set_of_non_terminals = tree_init(cstring_comparer);
@@ -212,14 +315,12 @@ grammar automatha_to_grammar(automatha a) {
 
 	list states = map_values(a->states);
 
-
 	map productions = grammar_get_productions(g);
 
 	foreach(state, s, states) {
 		if (i == 0) {
 			grammar_set_start_token(g, node_to_vn(s->name));
 		}
-
 
 		tree_add(set_of_non_terminals, node_to_vn(s->name));
 
@@ -255,13 +356,10 @@ grammar automatha_to_grammar(automatha a) {
 
 			}
 
-
-
 			tree_add(set_of_non_terminals, node_to_vn(t->to));
 		}
 		i++;
 	}
-
 
 	store_non_terminals(g, set_of_non_terminals);
 
@@ -271,5 +369,4 @@ grammar automatha_to_grammar(automatha a) {
 
 	return g;
 }
-
 
