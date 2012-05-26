@@ -57,8 +57,8 @@ static int print_is_valid(grammar g) {
 static int print_is_regular(grammar g) {
 	int reg = grammar_is_regular(g);
 	reg ? printf("La gramatica es regular %s\n",
-					reg == RIGHT ? "derecha" : "izquierda") :
-			printf("La gramatica no es regular\n");
+			reg == RIGHT ? "derecha" : "izquierda") : printf(
+			"La gramatica no es regular\n");
 	return reg;
 }
 
@@ -107,7 +107,8 @@ int grammar_can_become_regular(grammar g) {
 			} else {
 				if (is_non_terminal(g, prod_value[0]))
 					right = false;
-				else if (prod_value[0] != '\\' && is_non_terminal(g, prod_value[1])) {
+				else if (prod_value[0] != '\\' && is_non_terminal(g,
+						prod_value[1])) {
 					left = false;
 				}
 				if (!left && !right)
@@ -180,7 +181,8 @@ int grammar_is_regular(grammar g) {
 					right = false;
 				else if (is_non_terminal(g, prod_value[1]))
 					left = false;
-				else if (is_terminal_token(g, prod_value[0]) && is_terminal_token(g, prod_value[1])) {
+				else if (is_terminal_token(g, prod_value[0])
+						&& is_terminal_token(g, prod_value[1])) {
 					return false;
 				}
 			}
@@ -258,8 +260,8 @@ void grammar_print_info(grammar g) {
 	print_non_terminals(g);
 	print_start(g);
 	if (print_is_valid(g)) {
-		if(!print_is_regular(g))
-			if(grammar_can_become_regular(g))
+		if (!print_is_regular(g))
+			if (grammar_can_become_regular(g))
 				printf("La gramatica puede ser convertida a regular\n");
 			else
 				printf("La gramatica no puede ser convertida a regular\n");
@@ -283,7 +285,7 @@ void grammar_print(grammar g, FILE * file) {
 	j = 0;
 	len = list_size(g->vt);
 	foreachh(cstring, vt, g->vt) {
-		if(!cstring_compare(vt, "\\\\"))
+		if (!cstring_compare(vt, "\\\\"))
 			fprintf(file, "\\");
 		else
 			fprintf(file, "%s", vt);
@@ -439,7 +441,7 @@ static int is_generated_terminal(cstring token, int mode) {
 		}
 	} else if (mode == RIGHT) {
 		if (len >= 1) {
-			return islower(token[len - 1]) || is_generated(token[len -1]);
+			return islower(token[len - 1]) || is_generated(token[len - 1]);
 		} else {
 			return islower(token[0]);
 		}
@@ -458,16 +460,15 @@ static cstring get_next_end_terminal() {
 	return result;
 }
 
-static void grammar_split_non_terms(grammar g, production p, list productions, int mode) {
+static void grammar_split_non_terms(grammar g, production p, list productions,
+		int mode) {
 
 	list to_remove = list_init();
 	list to_add = list_init();
 
-
 	foreach(cstring, token, p->tokens) {
 
 		if (is_generated_terminal(token, mode)) {
-
 
 			int len = cstring_len(token);
 			cstring nonTerm;
@@ -483,16 +484,12 @@ static void grammar_split_non_terms(grammar g, production p, list productions, i
 
 			nonTerm = cstring_write(nonTerm, " ");
 
-
-
-
 			if (mode == RIGHT || mode == POST_PASS) {
 				nonTerm[1] = token[0];
 				nonTerm = cstring_reverse(nonTerm);
 			} else {
 				nonTerm[1] = token[len - 1];
 			}
-
 
 			list_add(to_remove, token);
 
@@ -519,7 +516,6 @@ static void grammar_split_non_terms(grammar g, production p, list productions, i
 				_st[0] = nonTerm[0];
 			}
 
-
 			if (map_get(g->p, _st) == NULL) {
 				pr = production_init();
 				pr->start = _st;
@@ -541,7 +537,6 @@ static void grammar_split_non_terms(grammar g, production p, list productions, i
 					production_add_token(pr, "\\");
 				}
 			}
-
 
 			grammar_add_non_terminal(g, pr->start);
 			grammar_add_production(g, pr);
@@ -611,8 +606,7 @@ static grammar grammar_to_right_form(grammar from, grammar to) {
 				if (is_new) {
 					grammar_add_production(to, new_prod);
 				}
-			}
-			else {
+			} else {
 				tree_add(lambdable_tokens, prod->start);
 			}
 
@@ -624,46 +618,154 @@ static grammar grammar_to_right_form(grammar from, grammar to) {
 	cstring q = cstring_init(1);
 
 	{
-	foreachh(production, prod, productions) {
-		foreach_(cstring, token, production_get_tokens(prod))
+		foreachh(production, prod, productions)
 		{
-			if (cstring_len(token) == 2) {
-				q[0] = token[1];
-				if (tree_get(lambdable_tokens, q) != NULL) {
-					production _p = map_get(to->p, q);
-					cstring new_token = cstring_init(1);
-					new_token[0] = token[0];
-					production_add_token(_p,new_token);
+			foreach_(cstring, token, production_get_tokens(prod))
+			{
+				if (cstring_len(token) == 2) {
+					q[0] = token[1];
+					if (tree_get(lambdable_tokens, q) != NULL) {
+						production _p = map_get(to->p, q);
+						cstring new_token = cstring_init(1);
+						new_token[0] = token[0];
+						production_add_token(_p, new_token);
+					}
 				}
 			}
 		}
 	}
-	}
-
-
-
-
 
 	return to;
 }
 
-static int prod_is_terminal(grammar g, production prod) {
+static int prod_is_terminal(production prod) {
 	int i = 0;
 	foreach_(cstring, token, prod->tokens) {
-		if (token[0] == '\\') return 1;
+		if (token[0] == '\\')
+			return 1;
 	}
 	return 0;
+}
+
+int list_has(list l, char obj) {
+	foreach(cstring, string, l) {
+		if (string[0] == obj) {
+			return true;
+		}
+	}
+	return false;
+}
+
+void grammar_remove_unreachable(grammar g) {
+	int changed = true, i;
+	list l = list_init();
+	list_add(l, g->s);
+
+	while (changed) {
+		changed = false;
+		foreach(production, prod, map_values(g->p))
+		{
+			if (list_has(l, prod->start[0])) {
+				foreach(cstring, token, prod->tokens)
+				{
+					for (i = 0; i < cstring_len(token); i++) {
+						if (is_non_terminal(g, token[i]) && !list_has(l, token[i])) {
+							changed = true;
+							list_add(l, &token[i]);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	foreach(cstring, node, map_keys(g->p))
+	{
+		if (!list_has(l, node[0])) {
+			map_remove(g->p, node);
+		}
+	}
+
+}
+
+int production_get_productives(grammar g, production prod, list l) {
+	int i, changed = true, usefull = false, has_added = false;
+
+	while (changed) {
+		changed = false;
+		foreach(cstring, token, prod->tokens)
+		{
+			usefull = true;
+			for (i = 0; i < cstring_len(token); i++) {
+				if (is_non_terminal(g, token[i])) {
+					if (!list_has(l, token[i])) {
+						usefull = false;
+					}
+				}
+			}
+			if (usefull) {
+				if (!list_has(l, prod->start[0])) {
+					list_add(l, prod->start);
+					changed = has_added = true;
+				}
+			}
+		}
+	}
+	return has_added;
+}
+
+int production_has_token(cstring c, cstring token) {
+	int i;
+	for (i = 0; i < cstring_len(token); i++) {
+		if (c[0] == token[i])
+			return true;
+	}
+	return false;
+}
+
+void grammar_remove_unproductive(grammar g) {
+	list l = list_init();
+	list removed = list_init();
+	int i, size, has_added = true;
+
+	while (has_added) {
+		foreach(production, prod, map_values(g->p))
+		{
+			has_added = production_get_productives(g, prod, l);
+		}
+	}
+
+	foreach(cstring, key, map_keys(g->p)) {
+		if (!list_has(l, key[0])) {
+			map_remove(g->p, key);
+			list_add(removed, key);
+		}
+	}
+
+	size = list_size(removed);
+	for (i = 0; i < size; i++) {
+		foreachh(production, prod, map_values(g->p))
+		{
+			foreachh(cstring, token, prod->tokens)
+			{
+				if (production_has_token(list_get(removed, i), token)) {
+					list_remove_item(prod->tokens, token, cstring_comparer);
+				}
+			}
+		}
+	}
 }
 
 automatha grammar_to_automatha(grammar g) {
 	automatha a = automatha_init();
 
+	grammar_remove_unreachable(g);
+	grammar_remove_unproductive(g);
+
 	grammar normalized = grammar_clone(g);
 	grammar lefted = grammar_init();
 
 	list productions = map_values(normalized->p);
-
-
 
 	foreach(production, p, productions) {
 		grammar_remove_units(normalized, p, normalized->p);
@@ -676,29 +778,22 @@ automatha grammar_to_automatha(grammar g) {
 	}
 
 	if (regularity == LEFT) {
-		printf("is left");
 		foreachh(production, _p, productions) {
-			grammar_print(normalized, stdout);
-			printf("\n");
 			grammar_split_non_terms(normalized, _p, productions, LEFT);
 
 		}
-		printf("\n");
-		grammar_print(normalized, stdout);
 
 		lefted = grammar_to_right_form(normalized, lefted);
-
-
 
 		productions = map_values(lefted->p);
 
 		{
-			foreachh(production, _p, productions) {
+			foreachh(production, _p, productions)
+			{
 				grammar_split_non_terms(lefted, _p, productions, POST_PASS);
 			}
 		}
 	} else {
-		printf("is right");
 		foreachh(production, _p, productions) {
 			grammar_split_non_terms(normalized, _p, productions, RIGHT);
 		}
@@ -712,27 +807,25 @@ automatha grammar_to_automatha(grammar g) {
 		}
 	}
 
-
-
+	grammar_remove_unreachable(lefted);
+	grammar_remove_unproductive(lefted);
 
 	productions = map_values(lefted->p);
 
 	foreachh(production, prod, productions) {
 
-
-		automatha_add_node(a, (prod_is_terminal(g, prod)) ? 1 : 0,
-														prod->start, prod->start);
+		automatha_add_node(a, (prod_is_terminal(prod)) ? 1 : 0, prod->start,
+				prod->start);
 
 		foreach_(cstring, token, prod->tokens)
 		{
 			cstring to, _token;
 			to = cstring_init(1);
 			_token = cstring_init(1);
-			to[0] = token[1] ;
+			to[0] = token[1];
 			_token[0] = token[0];
 			automatha_add_transition(a, prod->start, to, _token);
 		}
-
 
 	}
 
