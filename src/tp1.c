@@ -24,7 +24,7 @@ char buffer[BUFFER_SIZE];
 void tp_run(int mode) {
 	FILE * file = stdout;
 
-	FILE * membuffer = open_memstream(buffer, BUFFER_SIZE);
+	FILE * dotfile = fopen(".tmp", "w+");
 
 
 	grammar g;
@@ -40,8 +40,14 @@ void tp_run(int mode) {
 				return;
 			}
 
-			automatha_print(a, membuffer);
+			automatha_print(a, dotfile);
 
+
+
+			fflush(dotfile);
+			fclose(dotfile);
+
+			system("dot -Tpng .tmp > salida.png");
 
 
 			break;
