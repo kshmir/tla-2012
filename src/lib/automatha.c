@@ -161,17 +161,28 @@ static void print_first_state(automatha a, FILE * file) {
 	fprintf(file, "\n");
 }
 
-static void print_terminal_symbols(automatha a, FILE * file) {
-	fprintf(file, "Simbolos Terminales: ");
+list get_token_list(automatha a) {
 	tree t = tree_init(cstring_comparer);
 	foreach(state, st, map_values(a->states)) {
 		foreach(transition, trans, st->transitions)
 		{
-			tree_add(t, trans->token);
+			foreach(cstring, token, cstring_split_list(trans->token,"/"))
+			{
+				tree_add(t, token);
+			}
 		}
 	}
-	foreachh(cstring, token, tree_to_list(t)) {
-		fprintf(file, "%s, ", token);
+	return tree_to_list(t);
+}
+
+static void print_terminal_symbols(automatha a, FILE * file) {
+	list l = get_token_list(a);
+	fprintf(file, "Simbolos Terminales: ");
+	foreach(cstring, token, l) {
+		if (!cstring_compare("\\\\", token))
+			fprintf(file, "\\, ");
+		else
+			fprintf(file, "%s, ", token);
 	}
 	fprintf(file, "\n");
 }
@@ -186,35 +197,47 @@ void print_check_label(automatha a, transition t, FILE * file) {
 	}
 }
 
-static void print_table(automatha a, FILE * file) {
-	list l = list_init();
-	tree t = tree_init(cstring_comparer);
-	int i, size;
-	foreach(state, st, map_values(a->states)) {
-		foreach_(transition, trans, st->transitions)
-		{
-			tree_add(t, trans->token);
-		}
-	}
-	l = tree_to_list(t);
-	size = list_size(l);
-
+void print_table_header(list l, FILE * file) {
 	fprintf(file, "   |");
-	foreachh(cstring, token, l) {
-		fprintf(file, " %s |", token);
+	foreach(cstring, token, l) {
+		if (!cstring_compare("\\\\", token))
+			fprintf(file, " \\ |");
+		else
+			fprintf(file, " %s |", token);
 	}
 	fprintf(file, "\n");
 
-	foreachh(state, stat, map_values(a->states)) {
+}
+
+static void print_table(automatha a, FILE * file) {
+	int i, size, no_transitions, match;
+	list l = get_token_list(a);
+	size = list_size(l);
+
+	print_table_header(l, file);
+
+	foreach(state, stat, map_values(a->states)) {
 		fprintf(file, " %s |", stat->label);
+		no_transitions = true;
 		i = 0;
-		foreach_(transition, t, stat->transitions) {
-			while (t->token != list_get(l, i) && i < size) {
+		foreach(cstring, token, l) {
+		match = false;
+			foreach(transition, t, stat->transitions) {
+				no_transitions = false;
+				foreach(cstring, split, cstring_split_list(t->token, "/"))
+					if (!cstring_compare(token, split)) {
+						match = true;
+						print_check_label(a, t, file);
+					}
+			}
+			if (!no_transitions && !match)
+				fprintf(file, "   |");
+		}
+		if (no_transitions) {
+			while (i < size) {
 				fprintf(file, "   |");
 				i++;
 			}
-			print_check_label(a, t, file);
-			i++;
 		}
 		fprintf(file, "\n");
 	}
@@ -333,8 +356,12 @@ grammar automatha_to_grammar(automatha a) {
 				int is_new = 0;
 				cstring prodtok = cstring_init(2);
 				cstring tok = list_get(tokens, j);
-				prodtok[0] = tok[0];
-				prodtok[1] = node_to_vn(t->to)[0];
+				if(!cstring_compare(&tok[0], "\\\\")){
+					prodtok[0] = node_to_vn(t->to)[0];
+				}else{
+					prodtok[0] = tok[0];
+					prodtok[1] = node_to_vn(t->to)[0];
+				}
 
 				production p = map_get(productions, node_to_vn(s->name));
 

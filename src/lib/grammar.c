@@ -278,7 +278,10 @@ void grammar_print(grammar g, FILE * file) {
 	j = 0;
 	len = list_size(g->vt);
 	foreachh(cstring, vt, g->vt) {
-		fprintf(file, "%s", vt);
+		if(!cstring_compare(vt, "\\\\"))
+			fprintf(file, "\\");
+		else
+			fprintf(file, "%s", vt);
 		next_step();
 	}
 
@@ -304,7 +307,7 @@ void grammar_print(grammar g, FILE * file) {
 		next_step();
 	}
 
-	fprintf(file, "})");
+	fprintf(file, "})\n");
 
 }
 

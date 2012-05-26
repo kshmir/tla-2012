@@ -9,9 +9,10 @@ node[shape=circle] Node3 [label="3"];
 node[shape=doublecircle] Node4 [label="4"];
 
 //Transiciones - Es valido tener lambda como etiqueta.
-Node0->Node1 [label="a"];
 Node0->Node4 [label="c"];
+Node0->Node1 [label="a"];
 Node1->Node2 [label="\\"];
+Node1->Node3 [label="a"];
 Node2->Node4 [label="b"];
 Node2->Node3 [label="c/\\"];
 Node3->Node4 [label="b"];
