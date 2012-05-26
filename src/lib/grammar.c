@@ -462,7 +462,8 @@ static void grammar_split_non_terms(grammar g, production p, list productions, i
 
 			int len = cstring_len(token);
 			cstring nonTerm;
-			if (len == 1 || (len > 1 && islower(token[0]) && islower(token[len -1]))) {
+			if (len == 1) {
+//				printf("DOWNED: %s\n", token);
 				if (end_terminal == NULL) {
 					end_terminal = cstring_init(1);
 					end_terminal[0] = 'M';
@@ -507,7 +508,7 @@ static void grammar_split_non_terms(grammar g, production p, list productions, i
 			} else if (mode == POST_PASS) {
 				_st[0] = 'M';
 			} else {
-				_st[0] = nonTerm[len];
+				_st[0] = nonTerm[0];
 			}
 
 
@@ -662,14 +663,15 @@ automatha grammar_to_automatha(grammar g) {
 
 	int regularity = grammar_can_become_regular(normalized);
 
-//	if (regularity == 0) {
-//		return NULL;
-//	}
+	if (regularity == 0) {
+		return NULL;
+	}
 
 	if (regularity == LEFT) {
 		printf("is left");
 		foreachh(production, _p, productions) {
 			grammar_print(normalized, stdout);
+			printf("\n");
 			grammar_split_non_terms(normalized, _p, productions, LEFT);
 
 		}

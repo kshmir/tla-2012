@@ -4,3 +4,4 @@ salida
 src/lex.gen.c
 .project
 .cproject
+.tmp
