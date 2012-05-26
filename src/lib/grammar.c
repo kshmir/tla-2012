@@ -244,13 +244,17 @@ void grammar_add_production(grammar g, production production) {
 						fprintf(file, ",");\
 						} j++;
 
-void grammar_print(grammar g, FILE * file) {
-	printf("Parseo exitoso\n");
+void grammar_print_info(grammar g) {
 	print_terminals(g);
 	print_non_terminals(g);
 	print_start(g);
-	if (print_is_valid(g))
+	if (print_is_valid(g)) {
 		print_is_regular(g);
+	}
+}
+
+void grammar_print(grammar g, FILE * file) {
+
 	fprintf(file, "G1 = ({");
 
 	int j = 0;
@@ -586,14 +590,9 @@ automatha grammar_to_automatha(grammar g) {
 		grammar_remove_units(normalized, p, normalized->p);
 	}
 
-
-
-
-
 	int regularity = grammar_can_become_regular(normalized);
 
 	if (regularity == 0) {
-		printf("---INV---\n");
 		return NULL;
 	}
 
@@ -609,6 +608,13 @@ automatha grammar_to_automatha(grammar g) {
 		}
 
 		lefted = normalized;
+	}
+
+
+	regularity = grammar_is_regular(lefted);
+
+	if (regularity == 0 || !grammar_is_valid(lefted)) {
+		return NULL;
 	}
 
 	productions = map_values(lefted->p);

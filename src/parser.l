@@ -23,11 +23,14 @@ grammar _g;
 
 %%
 
-(\n|\/\/.*\n)         {}
+([ ])				  {}
+(\r\n|\/\/.*\r\n) 	  {}
+(\t|\n|\/\/.*\n)         {}
 
-([a-zA-Z0-9]+)[ ]?=   { if (parsingGrammar) { state++; } else { REJECT; } } 
 
-(\{)?[A-Z\\][ ]*->[ ]*([ ]*[A-Za-z\\]+[ ]*\|)*[ ]*[A-Za-z\\]+[ ]*(,)?       { 
+(.+)[ ]?=   { if (parsingGrammar) { state++; } else { REJECT; } } 
+
+[A-Z\\][ ]*->[ ]*([ ]*[A-Za-z\\]+[ ]*\|)*[ ]*[A-Za-z\\]+[ ]*(,)?       { 
 	
                         if (parsingGrammar && state == G_PRODUCTIONS) {
                         	cstring nokey = cstring_replace(yytext, "{", "");
@@ -148,6 +151,8 @@ doublecircle          {
 							automatha_trans_relation = cstring_copy(yytext);
 							
 							state = A_TRANS_MATCH; } else { REJECT; } }
+
+(\{|\(|\))?				  {}
 
 %%
 
