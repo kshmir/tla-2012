@@ -54,11 +54,12 @@ static int print_is_valid(grammar g) {
 	return valid;
 }
 
-static void print_is_regular(grammar g) {
+static int print_is_regular(grammar g) {
 	int reg = grammar_is_regular(g);
 	reg ? printf("La gramatica es regular %s\n",
 					reg == RIGHT ? "derecha" : "izquierda") :
 			printf("La gramatica no es regular\n");
+	return reg;
 }
 
 int grammar_is_valid(grammar g) {
@@ -257,8 +258,13 @@ void grammar_print_info(grammar g) {
 	print_non_terminals(g);
 	print_start(g);
 	if (print_is_valid(g)) {
-		print_is_regular(g);
+		if(!print_is_regular(g))
+			if(grammar_can_become_regular(g))
+				printf("La gramatica puede ser convertida a regular\n");
+			else
+				printf("La gramatica no puede ser convertida a regular\n");
 	}
+
 }
 
 void grammar_print(grammar g, FILE * file) {
