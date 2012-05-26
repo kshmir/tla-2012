@@ -47,6 +47,9 @@ void grammar_set_start_token(grammar g, cstring token);
  */
 void grammar_add_production(grammar g, production production);
 
+
+void grammar_print_info(grammar g);
+
 /**
  * Prints a grammar
  */

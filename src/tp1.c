@@ -5,16 +5,51 @@
 #include "utils/cstring.h"
 #include "tp1.h"
 
+
+FILE *fmemopen(void *buf, size_t size, const char *opentype) {
+	FILE *f;
+
+	f = tmpfile();
+	fwrite(buf, 1, size, f);
+	rewind(f);
+
+	return f;
+}
+
+
+#define BUFFER_SIZE 65535
+
+char buffer[BUFFER_SIZE];
+
 void tp_run(int mode) {
 	FILE * file = stdout;
+
+	FILE * dotfile = fopen(".tmp", "w+");
+
 
 	grammar g;
 	automatha a;
 	switch (mode) {
 		case GRAMMAR:
+			grammar_print_info(_g);
+
+
 			a = grammar_to_automatha(_g);
 
-			automatha_print(a, stdout);
+			if (a == NULL) {
+				return;
+			}
+
+			automatha_print(a, dotfile);
+
+
+
+			fflush(dotfile);
+			fclose(dotfile);
+
+			system("dot -Tpng .tmp > salida.png");
+
+
 			break;
 		case AUTOMATHA:
 			automatha_print_info(_a, stdout);
