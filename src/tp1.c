@@ -37,6 +37,7 @@ void tp_run(int mode) {
 			a = grammar_to_automatha(_g);
 
 			if (a == NULL) {
+				printf("FU!!!");
 				return;
 			}
 

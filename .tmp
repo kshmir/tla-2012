@@ -1,0 +1,19 @@
+digraph {
+	node[shape=doublecircle] A [label="A"]
+	node[shape=circle] B [label="B"]
+	node[shape=circle] C [label="C"]
+	node[shape=circle] D [label="D"]
+	node[shape=circle] M [label="M"]
+	B->A [label="a"];
+	C->B [label="b"];
+	D->C [label="b"];
+	D->D [label="a"];
+	D->D [label="b"];
+	M->A [label="d"];
+	M->A [label="a"];
+	M->B [label="b"];
+	M->C [label="b"];
+	M->D [label="a"];
+	M->D [label="b"];
+	M->M [label="c"];
+}

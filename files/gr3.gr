@@ -1,5 +1,5 @@
 
 G3 = ({A,B,C,D},
-	{a, b, c},
+	{a, b, c, d},
 	A,
-	{A->Ba | c, B->Cb | \, C ->Db | \, D->Da | C})
+	{A->Ba | cd, B->Cb | \, C ->Db | \, D->Da | C})
