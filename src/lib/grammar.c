@@ -469,7 +469,6 @@ static void grammar_split_non_terms(grammar g, production p, list productions, i
 			int len = cstring_len(token);
 			cstring nonTerm;
 			if (len == 1) {
-//				printf("DOWNED: %s\n", token);
 				if (end_terminal == NULL) {
 					end_terminal = cstring_init(1);
 					end_terminal[0] = 'M';
