@@ -179,7 +179,7 @@ void fix_productions(grammar g) {
 	foreach(production, p, production_values) {
 		list tokens = production_get_tokens(p);
 		foreach(cstring, token, tokens) {
-			cstring new_token = cstring_init(0);
+			cstring new_token = cstring_init(10);
 			int i = 0;
 			int len = cstring_len(token);
 			for (i = 0; i < len; ++i) {

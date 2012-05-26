@@ -57,8 +57,8 @@ static int print_is_valid(grammar g) {
 static void print_is_regular(grammar g) {
 	int reg = grammar_is_regular(g);
 	reg ? printf("La gramatica es regular %s\n",
-			reg == RIGHT ? "derecha" : "izquierda") : printf(
-			"La gramatica no es regular\n");
+					reg == RIGHT ? "derecha" : "izquierda") :
+			printf("La gramatica no es regular\n");
 }
 
 int grammar_is_valid(grammar g) {
@@ -97,18 +97,20 @@ int grammar_can_become_regular(grammar g) {
 		foreach(cstring, prod_value, ((production)map_get(m, prod_key))->tokens)
 		{
 			int len = cstring_len(prod_value);
-			if (len > 2){
+			if (len > 2) {
 				for (i = 0; i < len; i++) {
-					if (is_non_terminal(g, prod_value[i]))
+					if (is_non_terminal(g, prod_value[i])) {
 						return false;
+					}
 				}
+			} else {
+				if (is_non_terminal(g, prod_value[0]))
+					right = false;
+				else if (prod_value[0] != '\\')
+					left = false;
+				if (!left && !right)
+					return false;
 			}
-			if (is_non_terminal(g, prod_value[0]))
-				right = false;
-			else
-				left = false;
-			if (!left && !right)
-				return false;
 		}
 	}
 	if (right)
@@ -118,7 +120,6 @@ int grammar_can_become_regular(grammar g) {
 
 	return false;
 }
-
 
 int check_non_terminals(grammar g) {
 	int flag = false;
@@ -392,10 +393,9 @@ static void grammar_remove_units(grammar g, production p, map productions) {
 static cstring end_terminal = NULL;
 static end_terminal_i = 0;
 
-
 static int is_generated(char c) {
 	int i = 0;
-	for(i = 'Z' - end_terminal_i; i < 'Z' + 1; i++) {
+	for (i = 'Z' - end_terminal_i; i < 'Z' + 1; i++) {
 		if (c == i) {
 			return 1;
 		}
@@ -414,24 +414,28 @@ static int is_generated_terminal(cstring token) {
 	}
 }
 
-
-
 static cstring get_next_end_terminal() {
 	char start = 'Z';
 
 	cstring result = cstring_init(1);
 
-	result[0] = start - ( end_terminal_i++ );
+	result[0] = start - (end_terminal_i++);
 
 	return result;
 }
 
-static void grammar_split_non_terms(grammar g, production p, list productions) {
+static void grammar_split_non_terms(grammar g, production p, list productions, int mode) {
+
+	printf("%s\n",p->start);
+
 	list to_remove = list_init();
 	list to_add = list_init();
 
+
 	foreach(cstring, token, p->tokens) {
+
 		if (is_generated_terminal(token)) {
+
 			int len = cstring_len(token);
 			cstring nonTerm;
 			if (len == 1) {
@@ -445,7 +449,12 @@ static void grammar_split_non_terms(grammar g, production p, list productions) {
 			}
 
 			nonTerm = cstring_write(nonTerm, " ");
+
+
 			nonTerm[1] = token[len - 1];
+			if (mode == RIGHT) {
+				nonTerm = cstring_reverse(nonTerm);
+			}
 
 			list_add(to_remove, token);
 			list_add(to_add, nonTerm);
@@ -455,7 +464,15 @@ static void grammar_split_non_terms(grammar g, production p, list productions) {
 			production pr = production_init();
 
 			pr->start = cstring_init(1);
-			pr->start[0] = nonTerm[0];
+
+
+			if (mode == RIGHT) {
+				pr->start[0] = nonTerm[len];
+			} else {
+				pr->start[0] = nonTerm[0];
+			}
+
+
 
 			if (cstring_len(token) > 0) {
 				list_add(pr->tokens, token);
@@ -464,7 +481,7 @@ static void grammar_split_non_terms(grammar g, production p, list productions) {
 			}
 
 
-			grammar_add_non_terminal(g,pr->start);
+			grammar_add_non_terminal(g, pr->start);
 			grammar_add_production(g, pr);
 			list_add(productions, pr);
 		}
@@ -474,11 +491,11 @@ static void grammar_split_non_terms(grammar g, production p, list productions) {
 		list_add(p->tokens, tok);
 	}
 
-	foreachh(cstring, t, to_remove) {
+	foreachh(cstring, t, to_remove)
+	{
 		list_remove_item(p->tokens, t, cstring_comparer);
 	}
 }
-
 
 static grammar grammar_to_left_form(grammar from, grammar to) {
 	foreach(cstring, non_terminal, grammar_get_non_terminals(from)) {
@@ -500,10 +517,10 @@ static grammar grammar_to_left_form(grammar from, grammar to) {
 
 	grammar_add_production(to, def);
 
-
 	list productions = map_values(grammar_get_productions(from));
 	foreachh(production, prod, productions) {
-		foreach_(cstring, token, production_get_tokens(prod)) {
+		foreach_(cstring, token, production_get_tokens(prod))
+		{
 			if (cstring_compare(token, "\\") != 0) {
 				int is_new = 0;
 				production new_prod = NULL;
@@ -534,6 +551,14 @@ static grammar grammar_to_left_form(grammar from, grammar to) {
 	return to;
 }
 
+static int prod_is_terminal(grammar g, production prod) {
+	int i = 0;
+	foreach_(cstring, token, prod->tokens) {
+		if (token[0] == "\\") return 1;
+	}
+	return 0;
+}
+
 automatha grammar_to_automatha(grammar g) {
 	automatha a = automatha_init();
 
@@ -542,46 +567,67 @@ automatha grammar_to_automatha(grammar g) {
 
 	list productions = map_values(normalized->p);
 
+
+
 	foreach(production, p, productions) {
 		grammar_remove_units(normalized, p, normalized->p);
 	}
 
-	grammar_print(normalized, stdout);
 
-	int regularity = grammar_is_regular(normalized);
+
+
+
+	int regularity = grammar_can_become_regular(normalized);
 
 	if (regularity == 0) {
 		printf("---INV---\n");
 		return NULL;
 	}
 
-
 	if (regularity == LEFT) {
 		printf("---IZQ---\n");
 		foreachh(production, _p, productions) {
-			grammar_split_non_terms(normalized, _p, productions);
+			grammar_split_non_terms(normalized, _p, productions, LEFT);
 		}
 
 		lefted = grammar_to_left_form(normalized, lefted);
 	} else {
 		printf("---DER---\n");
+
+		grammar_print(normalized, stdout);
+		foreachh(production, _p, productions) {
+			grammar_split_non_terms(normalized, _p, productions, RIGHT);
+		}
+
 		lefted = normalized;
 	}
 
-	fix_productions(lefted);
+
+	grammar_print(lefted, stdout);
+
+//	fix_productions(lefted);
+
+
 
 	productions = map_values(lefted->p);
 
 	foreachh(production, prod, productions) {
-		automatha_add_node(a, (cstring_compare(prod->start, "A") == 0) ? 1 : 0, prod->start, prod->start);
-		foreach_(cstring, token, prod->tokens) {
+
+
+		automatha_add_node(a, (prod_is_terminal(g, prod)) ? 1 : 0,
+														prod->start, prod->start);
+
+		foreach_(cstring, token, prod->tokens)
+		{
 			cstring to, _token;
 			to = cstring_init(1);
 			_token = cstring_init(1);
-			to[0] = token[1];
+			to[0] = token[1] ;
 			_token[0] = token[0];
 			automatha_add_transition(a, prod->start, to, _token);
 		}
+
+
 	}
 
 	return a;
