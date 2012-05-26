@@ -41,8 +41,7 @@ grammar _g;
                       }
 
 \{[ ]*                {
-                        if (parsingGrammar && state == G_TERMS) {  
-                          //printf("parsingGrammarTerminals!\n"); ; 
+                        if (parsingGrammar && state == G_TERMS) {   
                         } else { REJECT; }
                       }
 
@@ -83,7 +82,7 @@ grammar _g;
                         } else if (parsingGrammar && state == G_TERMS) { 
                           state++;
                         } else if (parsingGrammar && state == G_PRODUCTIONS) { 
-                          printf("DONE Prods!\n");  state++;
+                          state++;
                         } else { REJECT; }
                       }
 

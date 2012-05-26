@@ -221,17 +221,18 @@ void production_add_token(production p, cstring token) {
 }
 
 void grammar_add_terminal(grammar g, cstring token) {
-	//	printf(".%s.\n", token);
-	list_add(g->vt, cstring_copy(token));
+	if (list_indexof(g->vt, token, cstring_comparer) == -1) {
+		list_add(g->vt, cstring_copy(token));
+	}
 }
 
 void grammar_add_non_terminal(grammar g, cstring token) {
-	//	printf(".%s.\n", token);
-	list_add(g->vn, cstring_copy(token));
+	if (list_indexof(g->vn, token, cstring_comparer) == -1) {
+		list_add(g->vn, cstring_copy(token));
+	}
 }
 
 void grammar_set_start_token(grammar g, cstring token) {
-	//	printf(".%s.\n", token);
 	g->s = cstring_copy(token);
 }
 
@@ -386,7 +387,7 @@ static void grammar_remove_units(grammar g, production p, map productions) {
 		list_remove_item(p->tokens, tr, NULL);
 		production to_add = map_get(productions, tr);
 
-		list_add_list(p->tokens, to_add->tokens);
+		list_add_list_no_copy(p->tokens, to_add->tokens, cstring_comparer);
 	}
 }
 
@@ -403,14 +404,22 @@ static int is_generated(char c) {
 	return 0;
 }
 
-static int is_generated_terminal(cstring token) {
+static int is_generated_terminal(cstring token, int mode) {
 	int i = 0;
 	int len = cstring_len(token);
 
-	if (len >= 1) {
-		return islower(token[0]) || is_generated(token[0]);
+	if (mode == LEFT) {
+		if (len >= 1) {
+			return islower(token[0]) || is_generated(token[0]);
+		} else {
+			return islower(token[0]);
+		}
 	} else {
-		return islower(token[0]);
+		if (len >= 1) {
+			return islower(token[len - 1]) || is_generated(token[len -1]);
+		} else {
+			return islower(token[0]);
+		}
 	}
 }
 
@@ -426,15 +435,13 @@ static cstring get_next_end_terminal() {
 
 static void grammar_split_non_terms(grammar g, production p, list productions, int mode) {
 
-	printf("%s\n",p->start);
-
 	list to_remove = list_init();
 	list to_add = list_init();
 
 
 	foreach(cstring, token, p->tokens) {
 
-		if (is_generated_terminal(token)) {
+		if (is_generated_terminal(token, mode)) {
 
 			int len = cstring_len(token);
 			cstring nonTerm;
@@ -443,7 +450,7 @@ static void grammar_split_non_terms(grammar g, production p, list productions, i
 					end_terminal = cstring_init(1);
 					end_terminal[0] = 'M';
 				}
-				nonTerm = end_terminal;
+				nonTerm = cstring_copy(end_terminal);
 			} else {
 				nonTerm = get_next_end_terminal();
 			}
@@ -451,20 +458,26 @@ static void grammar_split_non_terms(grammar g, production p, list productions, i
 			nonTerm = cstring_write(nonTerm, " ");
 
 
-			nonTerm[1] = token[len - 1];
+
+
 			if (mode == RIGHT) {
+				nonTerm[1] = token[0];
 				nonTerm = cstring_reverse(nonTerm);
+			} else {
+				nonTerm[1] = token[len - 1];
 			}
+
+
 
 			list_add(to_remove, token);
 			list_add(to_add, nonTerm);
 
-			token[len - 1] = 0;
+			cstring new_token = cstring_copy(token);
+
+			new_token[len - 1] = 0;
 
 			production pr = production_init();
-
 			pr->start = cstring_init(1);
-
 
 			if (mode == RIGHT) {
 				pr->start[0] = nonTerm[len];
@@ -474,8 +487,8 @@ static void grammar_split_non_terms(grammar g, production p, list productions, i
 
 
 
-			if (cstring_len(token) > 0) {
-				list_add(pr->tokens, token);
+			if (cstring_len(new_token) > 0) {
+				list_add(pr->tokens, cstring_copy(new_token));
 			} else {
 				list_add(pr->tokens, "\\");
 			}
@@ -497,7 +510,7 @@ static void grammar_split_non_terms(grammar g, production p, list productions, i
 	}
 }
 
-static grammar grammar_to_left_form(grammar from, grammar to) {
+static grammar grammar_to_right_form(grammar from, grammar to) {
 	foreach(cstring, non_terminal, grammar_get_non_terminals(from)) {
 		grammar_add_non_terminal(to, non_terminal);
 	}
@@ -554,7 +567,7 @@ static grammar grammar_to_left_form(grammar from, grammar to) {
 static int prod_is_terminal(grammar g, production prod) {
 	int i = 0;
 	foreach_(cstring, token, prod->tokens) {
-		if (token[0] == "\\") return 1;
+		if (token[0] == '\\') return 1;
 	}
 	return 0;
 }
@@ -585,29 +598,18 @@ automatha grammar_to_automatha(grammar g) {
 	}
 
 	if (regularity == LEFT) {
-		printf("---IZQ---\n");
 		foreachh(production, _p, productions) {
 			grammar_split_non_terms(normalized, _p, productions, LEFT);
 		}
 
-		lefted = grammar_to_left_form(normalized, lefted);
+		lefted = grammar_to_right_form(normalized, lefted);
 	} else {
-		printf("---DER---\n");
-
-		grammar_print(normalized, stdout);
 		foreachh(production, _p, productions) {
 			grammar_split_non_terms(normalized, _p, productions, RIGHT);
 		}
 
 		lefted = normalized;
 	}
-
-
-	grammar_print(lefted, stdout);
-
-//	fix_productions(lefted);
-
-
 
 	productions = map_values(lefted->p);
 

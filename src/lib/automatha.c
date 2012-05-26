@@ -157,7 +157,6 @@ static void store_non_terminals(grammar g, tree non_terminals) {
 	list l = tree_to_list(non_terminals);
 
 	foreach(cstring, t, l) {
-		printf("nonterm: .%s.\n", t);
 		grammar_add_non_terminal(g, t);
 	}
 }
@@ -166,7 +165,6 @@ static void store_terminals(grammar g, tree terminals) {
 	list l = tree_to_list(terminals);
 
 	foreach(cstring, t, l) {
-		printf("term: .%s.\n", t);
 		grammar_add_terminal(g, t);
 	}
 }
@@ -179,7 +177,7 @@ void fix_productions(grammar g) {
 	foreach(production, p, production_values) {
 		list tokens = production_get_tokens(p);
 		foreach(cstring, token, tokens) {
-			cstring new_token = cstring_init(10);
+			cstring new_token = cstring_init(0);
 			int i = 0;
 			int len = cstring_len(token);
 			for (i = 0; i < len; ++i) {
@@ -207,9 +205,6 @@ grammar automatha_to_grammar(automatha a) {
 
 
 	grammar g = grammar_init();
-
-
-
 	tree set_of_terminals = tree_init(cstring_comparer);
 	tree set_of_non_terminals = tree_init(cstring_comparer);
 
@@ -222,9 +217,7 @@ grammar automatha_to_grammar(automatha a) {
 
 	foreach(state, s, states) {
 		if (i == 0) {
-
 			grammar_set_start_token(g, node_to_vn(s->name));
-			printf("s: .%s.\n", grammar_get_start(g));
 		}
 
 

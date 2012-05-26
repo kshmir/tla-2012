@@ -9,16 +9,14 @@ void tp_run(int mode) {
 	FILE * file = stdout;
 
 	grammar g;
+	automatha a;
 	switch (mode) {
 		case GRAMMAR:
-			grammar_print(_g, stdout);
-
-			automatha a = grammar_to_automatha(_g);
+			a = grammar_to_automatha(_g);
 
 			automatha_print(a, stdout);
 			break;
 		case AUTOMATHA:
-//			automatha_print(_a, stdout);
 			g = automatha_to_grammar(_a);
 
 			grammar_print(g, stdout);

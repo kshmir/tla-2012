@@ -277,8 +277,21 @@ list list_copy(list l, cloner c) {
 	return _l;
 }
 
+int list_add_list_no_copy(list l, list to_add, comparer comp) {
+	int i = 0;
+	foreach(void *, p , to_add) {
+		if (list_indexof(l, p, comp) == -1) {
+			list_add(l, p);
+		}
+
+		i++;
+	}
+	return i;
+}
+
 int list_add_list(list l, list to_add) {
 	int i = 0;
+
 	foreach(void *, p , to_add) {
 		list_add(l, p);
 		i++;
