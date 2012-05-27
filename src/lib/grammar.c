@@ -87,20 +87,26 @@ int is_non_terminal(grammar g, char token) {
 	return false;
 }
 
-int grammar_can_become_regular(grammar g) {
+int grammar_can_become_regular(grammar g, int print) {
 	if (grammar_is_regular(g))
 		return true;
 	int i, right = true, left = true;
 	map m = grammar_get_productions(g);
 	foreach(cstring, prod_key, map_keys(m)) {
 		if (cstring_len(prod_key) > 1)
+		{
+			if(print)
+				fprintf(stdout, "Al menos una produccion tiene mas de un simbolo en su parte izquierda\n");
 			return false;
+		}
 		foreach(cstring, prod_value, ((production)map_get(m, prod_key))->tokens)
 		{
 			int len = cstring_len(prod_value);
 			if (len > 2) {
 				for (i = 0; i < len; i++) {
 					if (is_non_terminal(g, prod_value[i])) {
+						if(print)
+							fprintf(stdout, "Al menos una produccion tiene mas de dos simbolos en su parte derecha\n");
 						return false;
 					}
 				}
@@ -112,7 +118,11 @@ int grammar_can_become_regular(grammar g) {
 					left = false;
 				}
 				if (!left && !right)
+				{
+					if(print)
+						fprintf(stdout, "La gramatica tiene simbolos no terminales a derecha e izquierda de las producciones\n");
 					return false;
+				}
 			}
 		}
 	}
@@ -261,7 +271,7 @@ void grammar_print_info(grammar g) {
 	print_start(g);
 	if (print_is_valid(g)) {
 		if (!print_is_regular(g))
-			if (grammar_can_become_regular(g))
+			if (grammar_can_become_regular(g, true))
 				printf("La gramatica puede ser convertida a regular\n");
 			else
 				printf("La gramatica no puede ser convertida a regular\n");
@@ -624,7 +634,7 @@ static grammar grammar_to_right_form(grammar from, grammar to) {
 			{
 				if (cstring_len(token) == 2) {
 					q[0] = token[1];
-					if (tree_get(lambdable_tokens, q) != NULL) {
+					if (tree_get(lambdable_tokens, q) != NULL && tree_get(lambdable_tokens, prod->start) != NULL) {
 						production _p = map_get(to->p, q);
 						cstring new_token = cstring_init(1);
 						new_token[0] = token[0];
@@ -726,14 +736,14 @@ int production_has_token(cstring c, cstring token) {
 void grammar_remove_unproductive(grammar g) {
 	list l = list_init();
 	list removed = list_init();
-	int i, size, has_added = true;
+	int i, size, has_added = false;
 
-	while (has_added) {
+	do{
 		foreach(production, prod, map_values(g->p))
 		{
 			has_added = production_get_productives(g, prod, l);
 		}
-	}
+	}while(has_added);
 
 	foreach(cstring, key, map_keys(g->p)) {
 		if (!list_has(l, key[0])) {
@@ -771,7 +781,7 @@ automatha grammar_to_automatha(grammar g) {
 		grammar_remove_units(normalized, p, normalized->p);
 	}
 
-	int regularity = grammar_can_become_regular(normalized);
+	int regularity = grammar_can_become_regular(normalized, false);
 
 	if (regularity == 0) {
 		return NULL;
