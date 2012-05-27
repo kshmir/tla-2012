@@ -33,7 +33,6 @@ void tp_run(int mode) {
 		a = grammar_to_automatha(_g);
 
 		if (a == NULL) {
-			printf("No se puede convertir la gramatica\n");
 			return;
 		}
 
