@@ -30,12 +30,13 @@ grammar _g;
 
 (.+)[ ]?=   { if (parsingGrammar) { state++; } else { REJECT; } } 
 
-[A-Z\\][ ]*->[ ]*([ ]*[A-Za-z\\]+[ ]*\|)*[ ]*[A-Za-z\\]+[ ]*(,)?       { 
+[A-Z\\][ ]*->[ ]*([ ]*[A-Za-z0-9\\]+[ ]*\|)*[ ]*[A-Za-z0-9\\]+[ ]*(,)?       { 
 	
                         if (parsingGrammar && state == G_PRODUCTIONS) {
                         	cstring nokey = cstring_replace(yytext, "{", "");
                         	cstring nocomma = cstring_replace(nokey, ",", "");
                         	cstring trimmed = cstring_trim(nocomma);
+
                         	production p = production_from_string(trimmed);
                         	
                         	grammar_add_production(_g, p);
@@ -67,7 +68,7 @@ grammar _g;
                         } else { REJECT; }
                       }
 
-[A-Za-z](,)?          { 
+[A-Za-z0-9](,)?          { 
                         if (parsingGrammar && state == G_NON_TERMS) {
                         	cstring nocomma = cstring_replace(yytext, ",", "");
                         	cstring trimmed = cstring_trim(nocomma);

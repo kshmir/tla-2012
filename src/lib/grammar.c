@@ -98,8 +98,10 @@ int is_non_terminal(grammar g, char token) {
  * regular, hence the function returns false.
  */
 int grammar_can_become_regular(grammar g, int print) {
-	if (grammar_is_regular(g))
-		return true;
+	int reg = 0;
+	if ((reg = grammar_is_regular(g))) {
+		return reg;
+	}
 	int i, right = true, left = true;
 	map m = grammar_get_productions(g);
 	foreach(cstring, prod_key, map_keys(m)) {
@@ -122,11 +124,13 @@ int grammar_can_become_regular(grammar g, int print) {
 					}
 				}
 			} else {
-				if (is_non_terminal(g, prod_value[0]))
-					right = false;
-				else if (prod_value[0] != '\\' && is_non_terminal(g,
-						prod_value[1])) {
-					left = false;
+				if (len == 2) {
+					if (is_non_terminal(g, prod_value[0]) && is_terminal_token(g, prod_value[1]))
+						right = false;
+					else if (prod_value[0] != '\\' && is_non_terminal(g,
+							prod_value[1]) && is_terminal_token(g, prod_value[0])) {
+						left = false;
+					}
 				}
 				if (!left && !right) {
 					if (print)
@@ -199,9 +203,9 @@ int grammar_is_regular(grammar g) {
 			if (cstring_len(prod_value) > 2)
 				return false;
 			if (cstring_len(prod_value) == 2) {
-				if (is_non_terminal(g, prod_value[0]))
+				if (is_non_terminal(g, prod_value[0]) && is_terminal_token(g, prod_value[1]))
 					right = false;
-				else if (is_non_terminal(g, prod_value[1]))
+				else if (is_non_terminal(g, prod_value[1]) && is_terminal_token(g, prod_value[0]))
 					left = false;
 				else if (is_terminal_token(g, prod_value[0])
 						&& is_terminal_token(g, prod_value[1])) {
@@ -214,6 +218,7 @@ int grammar_is_regular(grammar g) {
 	}
 	if (right)
 		return RIGHT;
+
 	if (left)
 		return LEFT;
 
@@ -249,7 +254,7 @@ grammar grammar_init() {
 
 void production_add_token(production p, cstring token) {
 	if (list_indexof(p->tokens, token, cstring_comparer) == -1) {
-		list_add(p->tokens, token);
+		list_add(p->tokens, cstring_copy(token));
 	}
 }
 
@@ -367,6 +372,8 @@ production production_from_string(cstring string) {
 	// "X|Y|Z"
 	cstring productions_raw = list_get(parse, 1);
 
+
+
 	// Lista de {X, Y, Z}
 	list productions = cstring_split_list(productions_raw, "|");
 
@@ -458,14 +465,18 @@ static int is_generated_terminal(cstring token, int mode) {
 	int i = 0;
 	int len = cstring_len(token);
 
+
+
 	if (mode == LEFT) {
 		if (len >= 1) {
 			return islower(token[0]) || is_generated(token[0]);
 		} else {
+
 			return islower(token[0]);
 		}
 	} else if (mode == RIGHT) {
 		if (len >= 1) {
+
 			return islower(token[len - 1]) || is_generated(token[len - 1]);
 		} else {
 			return islower(token[0]);
@@ -494,7 +505,6 @@ static void grammar_split_non_terms(grammar g, production p, list productions,
 	foreach(cstring, token, p->tokens) {
 
 		if (is_generated_terminal(token, mode)) {
-
 			int len = cstring_len(token);
 			cstring nonTerm;
 			if (len == 1) {
@@ -833,6 +843,8 @@ automatha grammar_to_automatha(grammar g) {
 		}
 
 		lefted = normalized;
+
+		grammar_print(lefted, stdout);
 
 		regularity = grammar_is_regular(lefted);
 

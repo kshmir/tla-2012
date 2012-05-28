@@ -1,6 +1,1 @@
-G2 = (
-		{A, B, C, D},
-		{a, b, c},
-		A,
-		{A -> aB|c, B -> C|b, C->D | cD | b, D -> b}
-)
+Gramatik=({A,B,C,D},{a ,b },A,{A-> a | bC , B -> aD | bA , C -> aA | bD , D -> aB | bC | \ })
