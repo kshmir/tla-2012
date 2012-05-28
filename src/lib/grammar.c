@@ -62,6 +62,10 @@ static int print_is_regular(grammar g) {
 	return reg;
 }
 
+/*
+ * Returns true if all the left tokens of the productions are non-terminal symbols of the grammar
+ * and all the right tokens are terminal or non-terminal symbols of the grammar.
+ */
 int grammar_is_valid(grammar g) {
 	return check_terminals(g) && check_non_terminals(g);
 }
@@ -87,16 +91,22 @@ int is_non_terminal(grammar g, char token) {
 	return false;
 }
 
+/*
+ * Returns whether a grammar can be converted to a regular one or not.
+ * If a production has more than two symbols and one of them is non-terminal, return false.
+ * If a grammar has both left and right non-terminal symbols productions, it cannot become
+ * regular, hence the function returns false.
+ */
 int grammar_can_become_regular(grammar g, int print) {
 	if (grammar_is_regular(g))
 		return true;
 	int i, right = true, left = true;
 	map m = grammar_get_productions(g);
 	foreach(cstring, prod_key, map_keys(m)) {
-		if (cstring_len(prod_key) > 1)
-		{
-			if(print)
-				fprintf(stdout, "Al menos una produccion tiene mas de un simbolo en su parte izquierda\n");
+		if (cstring_len(prod_key) > 1) {
+			if (print)
+				fprintf(stdout,
+						"Al menos una produccion tiene mas de un simbolo en su parte izquierda\n");
 			return false;
 		}
 		foreach(cstring, prod_value, ((production)map_get(m, prod_key))->tokens)
@@ -105,8 +115,9 @@ int grammar_can_become_regular(grammar g, int print) {
 			if (len > 2) {
 				for (i = 0; i < len; i++) {
 					if (is_non_terminal(g, prod_value[i])) {
-						if(print)
-							fprintf(stdout, "Al menos una produccion tiene mas de dos simbolos en su parte derecha\n");
+						if (print)
+							fprintf(stdout,
+									"Al menos una produccion tiene mas de dos simbolos en su parte derecha\n");
 						return false;
 					}
 				}
@@ -117,10 +128,11 @@ int grammar_can_become_regular(grammar g, int print) {
 						prod_value[1])) {
 					left = false;
 				}
-				if (!left && !right)
-				{
-					if(print)
-						fprintf(stdout, "La gramatica tiene simbolos no terminales a derecha e izquierda de las producciones\n");
+				if (!left && !right) {
+					if (print)
+						fprintf(
+								stdout,
+								"La gramatica tiene simbolos no terminales a derecha e izquierda de las producciones\n");
 					return false;
 				}
 			}
@@ -397,6 +409,9 @@ grammar grammar_clone(grammar g) {
 	return _g;
 }
 
+/*
+ * Removes all unitary productions from a grammar production set.
+ */
 static void grammar_remove_units(grammar g, production p, map productions) {
 
 	list to_remove = list_init();
@@ -634,7 +649,8 @@ static grammar grammar_to_right_form(grammar from, grammar to) {
 			{
 				if (cstring_len(token) == 2) {
 					q[0] = token[1];
-					if (tree_get(lambdable_tokens, q) != NULL && tree_get(lambdable_tokens, prod->start) != NULL) {
+					if (tree_get(lambdable_tokens, q) != NULL && tree_get(
+							lambdable_tokens, prod->start) != NULL) {
 						production _p = map_get(to->p, q);
 						cstring new_token = cstring_init(1);
 						new_token[0] = token[0];
@@ -666,6 +682,9 @@ int list_has(list l, char obj) {
 	return false;
 }
 
+/*
+ * Removes all unreachable symbols from a grammar non-terminal symbols set.
+ */
 void grammar_remove_unreachable(grammar g) {
 	int changed = true, i;
 	list l = list_init();
@@ -679,7 +698,8 @@ void grammar_remove_unreachable(grammar g) {
 				foreach(cstring, token, prod->tokens)
 				{
 					for (i = 0; i < cstring_len(token); i++) {
-						if (is_non_terminal(g, token[i]) && !list_has(l, token[i])) {
+						if (is_non_terminal(g, token[i]) && !list_has(l,
+								token[i])) {
 							changed = true;
 							list_add(l, &token[i]);
 						}
@@ -733,17 +753,20 @@ int production_has_token(cstring c, cstring token) {
 	return false;
 }
 
+/*
+ * Removes all unproductive productions from the grammar's productions set.
+ */
 void grammar_remove_unproductive(grammar g) {
 	list l = list_init();
 	list removed = list_init();
 	int i, size, has_added = false;
 
-	do{
+	do {
 		foreach(production, prod, map_values(g->p))
 		{
 			has_added = production_get_productives(g, prod, l);
 		}
-	}while(has_added);
+	} while (has_added);
 
 	foreach(cstring, key, map_keys(g->p)) {
 		if (!list_has(l, key[0])) {
@@ -769,6 +792,7 @@ void grammar_remove_unproductive(grammar g) {
 automatha grammar_to_automatha(grammar g) {
 	automatha a = automatha_init();
 
+	//Remove unreachable symbols and unproductive productions before starting algorithm.
 	grammar_remove_unreachable(g);
 	grammar_remove_unproductive(g);
 
@@ -817,6 +841,7 @@ automatha grammar_to_automatha(grammar g) {
 		}
 	}
 
+	//Remove unreachable symbols and unproductive productions the algorithm may have added, though is not likely to happen.
 	grammar_remove_unreachable(lefted);
 	grammar_remove_unproductive(lefted);
 

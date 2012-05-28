@@ -63,16 +63,16 @@ automatha automatha_init() {
 
 static transition transition_init(cstring to, cstring token) {
 	transition t = malloc(sizeof(struct transition));
-	t->to = cstring_copy(to);
-	t->token = cstring_copy(token);
+	t->to = cstring_trim(to);
+	t->token = cstring_trim(token);
 	return t;
 }
 
 static state state_init(int final, cstring name, cstring label) {
 	state s = malloc(sizeof(struct state));
 	s->transitions = list_init();
-	s->name = cstring_copy(name);
-	s->label = cstring_copy(label);
+	s->name = cstring_trim(name);
+	s->label = cstring_trim(label);
 	s->is_final = final;
 	return s;
 }
@@ -221,7 +221,7 @@ static void print_table(automatha a, FILE * file) {
 		no_transitions = true;
 		i = 0;
 		foreach(cstring, token, l) {
-		match = false;
+			match = false;
 			foreach(transition, t, stat->transitions) {
 				no_transitions = false;
 				foreach(cstring, split, cstring_split_list(t->token, "/"))
@@ -324,10 +324,62 @@ void fix_productions(grammar g) {
 	}
 }
 
+int automatha_is_connected(automatha a) {
+	int flag = true, changed = true, i;
+
+	tree all_nodes = tree_init(cstring_comparer);
+	tree old_nodes = tree_init(cstring_comparer);
+	tree new_nodes = tree_init(cstring_comparer);
+
+	foreach(state, s, map_values(a->states)) {
+		if (flag) {
+			tree_add(old_nodes, s->name);
+			flag = false;
+		}
+		tree_add(all_nodes, s->name);
+	}
+
+	do {
+		list nodes = tree_to_list(old_nodes);
+		foreach(cstring, node, nodes) {
+			state s = map_get(a->states, node);
+			tree_add(new_nodes, node);
+			foreach_(transition, t, s->transitions)
+			{
+				tree_add(new_nodes, t->to);
+			}
+		}
+
+		if (tree_compare(old_nodes, new_nodes) == 0) {
+			list_free(nodes);
+			tree_free(old_nodes);
+			break;
+		}
+
+		list_free(nodes);
+		tree_free(old_nodes);
+
+		old_nodes = new_nodes;
+		new_nodes = tree_init(cstring_comparer);
+	} while (1);
+
+	int result = tree_compare(all_nodes, new_nodes);
+
+	tree_free(all_nodes);
+	tree_free(new_nodes);
+
+	return !result;
+}
+
 grammar automatha_to_grammar(automatha a) {
 
 	if (!_node_to_vn) {
 		_node_to_vn = map_init(cstring_comparer, NULL);
+	}
+
+	if (!automatha_is_connected(a)) {
+		fprintf(stdout, "El automata no es conexo\n");
+		return NULL;
 	}
 
 	grammar g = grammar_init();
@@ -356,9 +408,9 @@ grammar automatha_to_grammar(automatha a) {
 				int is_new = 0;
 				cstring prodtok = cstring_init(2);
 				cstring tok = list_get(tokens, j);
-				if(!cstring_compare(&tok[0], "\\\\")){
+				if (!cstring_compare(&tok[0], "\\\\")) {
 					prodtok[0] = node_to_vn(t->to)[0];
-				}else{
+				} else {
 					prodtok[0] = tok[0];
 					prodtok[1] = node_to_vn(t->to)[0];
 				}

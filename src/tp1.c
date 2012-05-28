@@ -47,6 +47,10 @@ void tp_run(int mode) {
 	case AUTOMATHA:
 		automatha_print_info(_a, stdout);
 		g = automatha_to_grammar(_a);
+
+		if(g == NULL)
+			return;
+
 		grammar_print(g, stdout);
 
 		break;
