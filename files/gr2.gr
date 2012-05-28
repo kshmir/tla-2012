@@ -1,0 +1,1 @@
+Gramatik=({A,B,C,D},{a ,b },A,{A-> a | bC , B -> aD | bA , C -> aA | bD , D -> aB | bC | \ })

@@ -464,4 +464,26 @@ void tree_free(tree t) {
 	free(t);
 }
 
+int tree_compare(tree t1, tree t2) {
+	if (t1->comp != t2->comp) return 1;
+	if (t1->size != t2->size) return 1;
 
+	list values1 = tree_to_list(t1);
+	list values2 = tree_to_list(t2);
+
+	int len = t1->size;
+	int i = 0;
+
+	for (i = 0; i < len; ++i) {
+		void * p1 = list_get(values1, i);
+		void * p2 = list_get(values2, i);
+		if (t1->comp(p1,p2) != 0) {
+			return 1;
+		}
+	}
+
+	list_free(values1);
+	list_free(values2);
+
+	return 0;
+}

@@ -1,116 +1,164 @@
+%option noyywrap
+
 %{
+#include "tp1.h"
+#include "lib/automatha.h"
+#include "lib/grammar.h"
 
-  #define G_TUPLES      0
-  #define G_NON_TERMS   1
-  #define G_TERMS       2
-  #define G_START       3
-  #define G_PRODUCTIONS 4
+int parsingGrammar = 0;
+int state = 0;
+int parsingAutomatha = 0;
 
-  int parsingGrammar = 0;
+int     automatha_state_isfinal = 0;
+cstring automatha_state_name;
+cstring automatha_state_label;
 
-  int state = 0; 
+cstring automatha_trans_relation;
+cstring automatha_trans_label;
 
-  int parsingAutomatha = 0;
-
-  #define A_STATE_SHAPE_START      1
-  #define A_STATE_SHAPE_END        2
-  #define A_STATE_NAME_START       3
-  #define A_STATE_NAME_END         4
-  #define A_STATE_LABEL_START      5
-  #define A_STATE_LABEL_END        6
-  #define A_STATE_END              7
-
-  #define A_TRANS_MATCH            8
-  #define A_TRANS_LABEL_START      9
-  #define A_TRANS_LABEL_END        10
+automatha _a;
+grammar _g;
 
 %}
 
 %%
 
-(\n|\/\/.*\n)         {}
+([ ])				  {}
+(\r\n|\/\/.*\r\n) 	  {}
+(\t|\n|\/\/.*\n)         {}
 
-([a-zA-Z0-9]+)[ ]?=   { if (parsingGrammar) { state++; printf("GRAMMAR!\n"); } else { REJECT; } } 
 
-(\{)?[A-Z][ ]*->[ ]*([A-Za-z\\]+\|)*[A-Za-z]+[ ]*(,)?       { 
-                        if (parsingGrammar && state == G_PRODUCTIONS) { 
-                          printf("grammarProduction!"); 
+(.+)[ ]?=   { if (parsingGrammar) { state++; } else { REJECT; } } 
+
+[A-Z\\][ ]*->[ ]*([ ]*[A-Za-z0-9\\]+[ ]*\|)*[ ]*[A-Za-z0-9\\]+[ ]*(,)?       { 
+	
+                        if (parsingGrammar && state == G_PRODUCTIONS) {
+                        	cstring nokey = cstring_replace(yytext, "{", "");
+                        	cstring nocomma = cstring_replace(nokey, ",", "");
+                        	cstring trimmed = cstring_trim(nocomma);
+
+                        	production p = production_from_string(trimmed);
+                        	
+                        	grammar_add_production(_g, p);
+                       
                         } else { REJECT; }
                       }
 
 \{[ ]*                {
-                        if (parsingGrammar && state == G_TERMS) {  
-                          printf("parsingGrammarTerminals!\n"); ; 
+                        if (parsingGrammar && state == G_TERMS) {   
                         } else { REJECT; }
                       }
 
 [ ]*\([ ]*\{[ ]*      { 
                         if (parsingGrammar && state == G_NON_TERMS) {  
-                          printf("parsingGrammarNonTerminals!\n"); ; 
+                           
                         } else { REJECT; }
                       }
 
 [A-Z][ ]*(,)          {
                         if (parsingGrammar && state == G_START) {
-                          printf("GRAMMAR START!\n"); state++;
-                        } else if (parsingGrammar && state == G_NON_TERMS) { 
-                          printf("NT"); 
+                        	cstring nocomma = cstring_replace(yytext, ",", "");
+							cstring trimmed = cstring_trim(nocomma);
+							grammar_set_start_token(_g, trimmed);
+							state++;
+                        } else if (parsingGrammar && state == G_NON_TERMS) {
+                        	cstring nocomma = cstring_replace(yytext, ",", "");
+							cstring trimmed = cstring_trim(nocomma);
+							grammar_add_non_terminal(_g, trimmed);
                         } else { REJECT; }
                       }
 
-[A-Za-z](,)?          { 
-                        if (parsingGrammar && state == G_NON_TERMS) { 
-                          printf("NT"); 
+[A-Za-z0-9](,)?          { 
+                        if (parsingGrammar && state == G_NON_TERMS) {
+                        	cstring nocomma = cstring_replace(yytext, ",", "");
+                        	cstring trimmed = cstring_trim(nocomma);
+                        	grammar_add_non_terminal(_g, trimmed); 
                         } else if (parsingGrammar && state == G_TERMS) { 
-                          printf("T "); 
+                        	cstring nocomma = cstring_replace(yytext, ",", "");
+							cstring trimmed = cstring_trim(nocomma);
+							grammar_add_terminal(_g, trimmed); 
                         } else { REJECT; }
                       }
 
 \}[ ]*,[ ]*           { 
                         if (parsingGrammar && state == G_NON_TERMS) { 
-                          printf("\nDONE PNT!\n"); state++;
+                          state++;
                         } else if (parsingGrammar && state == G_TERMS) { 
-                          printf("\nDONE PT!\n"); state++;
+                          state++;
                         } else if (parsingGrammar && state == G_PRODUCTIONS) { 
-                          printf("DONE Prods!\n");  state++;
+                          state++;
                         } else { REJECT; }
                       }
 
 [ ]*\}[ ]*\)          {;
                         if (parsingGrammar && state == G_PRODUCTIONS) { 
-                          printf("\t\nDONE WITH GRAMMAR!\n");
+                        
                         }  else { REJECT; }
                       }    
 digraph[ ]*\{         { 
-                        state++; printf("AUTHOMATA!!!\n");
+                        state++; 
                       }
 
 rankdir.*;            {}
 
 node[ ]*\[shape=      { if (parsingAutomatha) { state = A_STATE_SHAPE_START; } }
-circle                { if (parsingAutomatha && state == A_STATE_SHAPE_START) { printf("GOT NORMAL STATE\n"); state++; } else { REJECT;} }
-doublecircle          { if (parsingAutomatha && state == A_STATE_SHAPE_START) { printf("GOT END STATE\n"); state++; } else { REJECT;} }
+circle                { 
+						if (parsingAutomatha && state == A_STATE_SHAPE_START) { 
+							automatha_state_isfinal = 0; state++; 
+						} else { REJECT; } 
+
+					  }
+doublecircle          { 
+						if (parsingAutomatha && state == A_STATE_SHAPE_START) { 
+							automatha_state_isfinal = 1; state++; 
+						} else { REJECT; } 
+					  }
 \][ ]*                { if (parsingAutomatha && state == A_STATE_SHAPE_END) { state = A_STATE_NAME_START; } else { REJECT; } }
-[A-Za-z0-9]+[ ]*      { if (parsingAutomatha && state == A_STATE_NAME_START) { printf("\n", yytext); state = A_STATE_LABEL_START; } else { REJECT; } }
+
+[A-Za-z0-9]+[ ]*      { 
+						if (parsingAutomatha && state == A_STATE_NAME_START) 
+						{ 
+							automatha_state_name = cstring_trim(yytext); 
+							state = A_STATE_LABEL_START; 
+						} else { REJECT; } 
+					  }
 \[label=\"            { if (parsingAutomatha && state == A_STATE_LABEL_START) { state = A_STATE_LABEL_END; } 
                    else if (parsingAutomatha && state == A_TRANS_MATCH) { state = A_TRANS_LABEL_START; } else { REJECT; } }
-[A-Za-z0-9]+          { if (parsingAutomatha && state == A_STATE_LABEL_END) { state = A_STATE_END; } 
-                   else if (parsingAutomatha && state == A_TRANS_LABEL_START) { state = A_TRANS_LABEL_END; } else { REJECT; } }
+[A-Za-z0-9/\\]+        { 
+						if (parsingAutomatha && state == A_STATE_LABEL_END) 
+						{ 
+							automatha_state_label = cstring_copy(yytext);
+							automatha_add_node(_a, automatha_state_isfinal, automatha_state_name, automatha_state_label);
+							state = A_STATE_END; 							
+						} 
+						else if (parsingAutomatha && state == A_TRANS_LABEL_START) { 
+							automatha_trans_label = cstring_copy(yytext);
+							
+							list tokens = cstring_split_list(automatha_trans_relation, "->");
+	
+							automatha_add_transition(_a, list_get(tokens, 0), list_get(tokens, 1), automatha_trans_label);
+
+							list_free(tokens);
+							
+							state = A_TRANS_LABEL_END; 
+						} else { REJECT; } 
+					}
 \"][ ]*;              { if (parsingAutomatha && state == A_STATE_END) { state = 0; }
                    else if (parsingAutomatha && state == A_TRANS_LABEL_END) { state = 0; } else { REJECT; } }
 
-\}                    { if (parsingAutomatha) { } }
+\}                    {  }
 
-[A-Za-z0-9]+[ ]*->[A-Za-z0-9]+[ ]*[ ] { if (parsingAutomatha && state == 0) { state = A_TRANS_MATCH; } else { REJECT; } }
+[A-Za-z0-9]+[ ]*->[A-Za-z0-9]+[ ]*[ ] { if (parsingAutomatha && state == 0) { 
+							automatha_trans_relation = cstring_copy(yytext);
+							
+							state = A_TRANS_MATCH; } else { REJECT; } }
+
+(\{|\(|\))?				  {}
 
 %%
 
 
 
-int main ()
-{
-  parsingGrammar = 0;
-  parsingAutomatha = 1;
-  yylex();
-  return 0;
+int main(int len, char ** args) {
+  run(len, args);
 }

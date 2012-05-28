@@ -350,3 +350,17 @@ cstring cstring_copy_till_char(cstring s, char c, int amount){
 	
 	return cstring_sub(s, i-1);
 }
+
+cstring cstring_trim(cstring s) {
+	int i = 0, j = cstring_len(s) - 1;
+
+	while(s[i] == ' ') i++;
+	while(s[j] == ' ') j--;
+
+
+	if (s[j] == ' ') j--;
+
+
+
+	return cstring_sub(s + i, j + 1 - i);
+}

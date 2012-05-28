@@ -1,0 +1,18 @@
+digraph{
+rankdir = "LR";
+//Nodos
+node[shape=doublecircle] Node0 [label="0"];
+node[shape=circle] Node1 [label="1"];
+node[shape=circle] Node2 [label="2"];
+
+//Transiciones - Es valido tener lambda como etiqueta.
+Node0->Node0 [label="0"];
+Node0->Node1 [label="1"];
+Node0->Node2 [label="2"];
+Node1->Node0 [label="2"];
+Node1->Node1 [label="0"];
+Node1->Node2 [label="1"];
+Node2->Node0 [label="\\"];
+Node2->Node1 [label="2"];
+Node2->Node2 [label="0"];
+}

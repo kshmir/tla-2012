@@ -1,0 +1,1 @@
+Gr4m4t1c4=({A,B,C},{a, b, c},A,{A->B|C, B->aB|cB|bC, C->aA|b|\})

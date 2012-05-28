@@ -35,12 +35,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define malloc(p)			malloc(p)
-#define calloc(p,k)			calloc(p,k)
-#define realloc(p,k)		relloc(p,k)
-#define free(p)				free(p)
-
-
 /**
  * Used to print coloured console
  */
@@ -189,5 +183,8 @@ void * double_cloner(void * double1);
  * @return Cloned cstring.
  */
 void * cstring_cloner(void * s1);
+
+
+void * pointer_cloner(void * ptr);
 
 #endif

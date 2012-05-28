@@ -35,4 +35,6 @@ list tree_to_list(tree t);
 
 void tree_free(tree t);
 
+int tree_compare(tree t1, tree t2);
+
 #endif 

@@ -24,6 +24,10 @@
 #include <stdio.h>
 
 
+void * pointer_cloner(void * ptr) {
+	return ptr;
+}
+
 int pointer_comparer(void * int1, void * int2) {
 	return (int*)int1 - (int*)int2;
 }

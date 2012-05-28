@@ -3,38 +3,103 @@
 #include <string.h>
 #include "utils/list.h"
 #include "utils/cstring.h"
+#include "tp1.h"
 
+FILE *fmemopen(void *buf, size_t size, const char *opentype) {
+	FILE *f;
 
+	f = tmpfile();
+	fwrite(buf, 1, size, f);
+	rewind(f);
 
-cstring from_file(cstring path) {
-  cstring builder = cstring_init(1);
-  cstring buffer = cstring_init(1024);
-  FILE * pFile;
-  pFile = fopen (path , "r");
-  if ( fgets (buffer , 1024 , pFile) != NULL ) {
-    builder = cstring_write(builder, buffer);
-  }
-  fclose (pFile);
-
-  printf("%s\n", builder);
+	return f;
 }
 
-int authomata_to_grammar() {
+#define BUFFER_SIZE 65535
 
+char buffer[BUFFER_SIZE];
+
+void tp_run(int mode) {
+	FILE * file = stdout;
+
+	FILE * dotfile = fopen(".tmp", "w+");
+
+	grammar g;
+	automatha a;
+	switch (mode) {
+	case GRAMMAR:
+		grammar_print_info(_g);
+
+		a = grammar_to_automatha(_g);
+
+		if (a == NULL) {
+			printf("No se pudo convertir a gramatica");
+			return;
+		}
+
+		automatha_print(a, dotfile);
+
+		fflush(dotfile);
+		fclose(dotfile);
+
+		system("dot -Tpng .tmp > salida.png");
+
+		break;
+	case AUTOMATHA:
+		automatha_print_info(_a, stdout);
+		g = automatha_to_grammar(_a);
+
+		if(g == NULL)
+			return;
+
+		grammar_print(g, stdout);
+
+		break;
+	}
 }
 
-int grammar_to_authomata() {
-  from_file("hola.gr");
+void run(int len, char ** args) {
+	if (len == 2) {
+		char * input = args[1];
+		int ready_to_read = 0;
+
+		if (strstr(input, ".gr") != NULL) {
+			FILE * pFile = fopen(input, "r");
+			if (pFile == NULL) {
+				printf("Archivo no encontrado\n");
+				return;
+			}
+			stdin = pFile;
+			ready_to_read = GRAMMAR;
+			start_adts(ready_to_read);
+		}
+		if (strstr(input, ".dot") != NULL) {
+			FILE * pFile = fopen(input, "rx3");
+			if (pFile == NULL) {
+				printf("Archivo no encontrado\n");
+				return;
+			}
+			stdin = pFile;
+			ready_to_read = AUTOMATHA;
+			start_adts(ready_to_read);
+		}
+
+		if (ready_to_read) {
+			yylex();
+			tp_run(ready_to_read);
+		}
+	}
 }
 
-int main(int len, char ** args) {
-  if (len == 2) {
-    char * input = args[0];
-    if (strstr(input,".gr") != -1) {
-      grammar_to_authomata();
-    }
-    if (strstr(input,".dot") != -1) {
-      authomata_to_grammar();
-    }
-  }
+void start_adts(int mode) {
+	switch (mode) {
+	case GRAMMAR:
+		_g = grammar_init();
+		parsingGrammar = 1;
+		break;
+	case AUTOMATHA:
+		_a = automatha_init();
+		parsingAutomatha = 1;
+		break;
+	}
 }
